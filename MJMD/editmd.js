@@ -33,12 +33,11 @@ window.onload=function(e){
 
   // Get elements
   var ta_edit=document.getElementById("ta_edit");
-
-  
 };
 
 var MathJaxMarkdownEditor = function() {
     this.svgarray = new SVGArray();
+    this.renderer = new MathJaxMarkdownRenderer();
 
     // Get elements
     this.ta_edit=document.getElementById("ta_edit");
@@ -47,6 +46,8 @@ var MathJaxMarkdownEditor = function() {
     this.div_downloadhtml = document.getElementById("div_downloadhtml");
 
     this.displayEditTab();
+    var that = this;
+    //this.renderer.render(function(){that.renderedHandler();});
 
     MathJax.Hub.Config({
         tex2jax: {
@@ -60,11 +61,7 @@ var MathJaxMarkdownEditor = function() {
     var that=this;
     this.btn_mdhtml.addEventListener('click', function() {
         if(that.ta_edit.style.display=='block'){
-          that.div_html.innerHTML=that.ta_edit.value;
-          MathJax.Hub.Queue(["Typeset",MathJax.Hub,that.div_html]);
-          MathJax.Hub.Queue(function() {
-	      that.mathjaxDoneHandler();
-          });
+          that.renderer.render(function(){that.renderedHandler();});
         }
         else{
             that.ta_edit.style.display='block';
@@ -82,70 +79,20 @@ MathJaxMarkdownEditor.prototype.displayEditTab = function() {
     this.div_downloadhtml.innerHTML="";
 };
 
-MathJaxMarkdownEditor.prototype.mathjaxDoneHandler = function() {
+MathJaxMarkdownEditor.prototype.renderedHandler = function() {
 
-    // --- Handle code sections without '>' displaying as '&gt;' ---
-    // https://github.com/chjj/marked/issues/160#issuecomment-18611040
-
-    // Let marked do its normal token generation.
-    var tokens = marked.lexer( this.div_html.innerHTML );
-
-    // Mark all code blocks as already being escaped.
-    // This prevents the parser from encoding anything inside code blocks
-    tokens.forEach(function( token ) {
-        if ( token.type === "code" ) {
-            token.escaped = true;
-        }
-    });
-
-    // Let marked do its normal parsing, but without encoding the code blocks
-    this.div_html.innerHTML = marked.parser( tokens );
-    // -------------------------------------------------------------
-
-    this.ta_edit.style.display='none';
-    this.div_html.style.display='block';
-    this.btn_mdhtml.innerHTML='Edit';
-
-    this.processMathJaxOutput();
-
+    // Create HTML with no dependencies for downloading
     var html = this.createHTML();
     var blob=new Blob([html],{type: "text/html"});
     var url = URL.createObjectURL(blob);
     var fn="MJMD_out.html";
     var a_download = '<a href="' + url + '" download="' + fn + '">Download "' + fn + '"</a>';
     this.div_downloadhtml.innerHTML=a_download;
-};
 
-MathJaxMarkdownEditor.prototype.processMathJaxOutput = function() {
-    // Get the SVG path definitions
-    var defs=document.getElementById("MathJax_SVG_glyphs");
-    this.svgarray.clear();
-    if(defs)this.svgarray.addDefs(defs);
-
-    // Remove MathML stuff
-    var mjs=this.div_html.getElementsByClassName("MathJax_SVG");
-    for(var i=0; i<mjs.length; i++){
-        this.addClickHandler(mjs, i);
-        var svg = mjs[i].getElementsByTagName("svg")[0];
-        this.svgarray.addImage(svg);
-        var span = mjs[i].getElementsByTagName("math")[0].parentNode;
-        span.parentNode.removeChild(span);
-    }
-};
-
-MathJaxMarkdownEditor.prototype.addClickHandler = function(elems, index){
-    var that=this;
-    elems[index].addEventListener("click", function(e) {
-        for(var i=0; i<elems.length; i++) elems[i].style.backgroundColor="";
-        elems[index].style.backgroundColor="#ccccff"
-
-	var blob=new Blob([that.svgarray.getImageIncDefs(index)]);
-        var url = URL.createObjectURL(blob);
-        var fn = "equation.svg"
-	var a_download = '<a href="' + url + '" download="' + fn + '">Download "' + fn + '"</a>';
-  
-        document.getElementById("div_downloadeqn").innerHTML=a_download;
-    });
+    // Switch view to rendered output
+    this.ta_edit.style.display='none';
+    this.div_html.style.display='block';
+    this.btn_mdhtml.innerHTML='Edit';
 };
 
 MathJaxMarkdownEditor.prototype.createHTML = function(){
@@ -161,3 +108,4 @@ MathJaxMarkdownEditor.prototype.createHTML = function(){
     html+="</body>\n</html>";  
     return html;
 };
+
