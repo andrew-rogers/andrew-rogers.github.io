@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" charset="UTF-8">
+
+<script src="../MJMD/MathJaxMarkdownRenderer.js"></script>
+<script src="../MJMD/marked.js"></script>
+<script src="../MJMD/svgarray.js"></script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG"></script>
+</head>
+<body>
+
+<div id="div_html"></div>
+<div id="div_md">
+<textarea id="ta_edit" rows="30" cols="100" style="display:none;">
+Laplace Transfer Functions of RLC Circuits.
+===========================================
+
+RC High-pass Filter
+-------------------
+
+
+
+\begin{align}
+  H(s) = \frac{V_{out}(s)}{V_{in}(s)} = \frac{s}{s+\frac{1}{RC}}
+\end{align}
+
+### Bode Plot using GNU Octave
+GNU Octave can be used for bode plotting using the following script: 
+```octave
+% Units for component values
+uF=1e-6;
+
+% Component values
+C=100*uF;
+R=8;
+
+% Frequency range, 3 decades.
+f=10.^(1:0.01:4);
+
+% Laplace transform evaluation
+s=i*2*pi*f;
+H=s./(s+(1/(R*C)));
+
+% Log plot in dBs
+semilogx(f,20*log10(abs(H)));
+xlabel('Frequency (Hz)')
+ylabel('H(s) (dB)')
+```
+
+</textarea>
+</div>
+<div id="div_downloadhtml"></div>
+<div id="div_downloadeqn"></div>
+<script>
+window.onload=function(e){
+    var renderer = new MathJaxMarkdownRenderer();
+    var div_html=document.getElementById("div_html");
+    div_html.style.display='none'; 
+    renderer.render(function(){
+        // Enable display of rendered output
+        div_html.style.display='block';
+    });
+};
+</script>
+</body>
+</html>
