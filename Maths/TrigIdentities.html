@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" charset="UTF-8">
+
+<script src="../MJMD/MathJaxMarkdownRenderer.js"></script>
+<script src="../MJMD/marked.js"></script>
+<script src="../MJMD/svgarray.js"></script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG"></script>
+</head>
+<body>
+
+<div id="div_html"></div>
+<div id="div_md">
+<textarea id="ta_edit" rows="30" cols="100" style="display:none;">
+Trigonometric Identities
+========================
+
+Euler's Formula
+---------------
+
+\begin{align}
+  e^{i\theta} = \cos \theta + i\sin \theta
+\end{align}
+
+Ptolemy’s Identities Derived from Euler's Formula
+-------------------------------------------------
+
+\begin{align}
+  e^{i(\alpha + \beta)} &= e^{i\alpha} \cdot e^{i\beta} \\
+  \cos(\alpha + \beta) + i\sin(\alpha + \beta) &= (\cos \alpha + i\sin \alpha)(\cos \beta + i\sin \beta) \\
+                                               &= \cos\alpha\cos\beta-\sin\alpha\sin\beta + i(\sin\alpha\cos\beta+\cos\alpha\sin\beta) \\
+  \cos(\alpha + \beta) &= \cos\alpha\cos\beta-\sin\alpha\sin\beta \\
+  \sin(\alpha + \beta) &= \sin\alpha\cos\beta+\cos\alpha\sin\beta
+\end{align}
+
+### Difference Formulae
+Difference Formulae are found by substituting $\beta=-\beta$ into the above formulae.
+\begin{align}
+  \cos(\alpha - \beta) &= \cos\alpha\cos\beta+\sin\alpha\sin\beta \\
+  \sin(\alpha - \beta) &= \sin\alpha\cos\beta-\cos\alpha\sin\beta
+\end{align}
+
+### Product Identities
+\begin{align}
+  \cos(\alpha + \beta) + \cos(\alpha - \beta) &= \cos\alpha\cos\beta - \sin\alpha\sin\beta + \cos\alpha\cos\beta + \sin\alpha\sin\beta \\
+                                              &= 2\cos\alpha\cos\beta \\
+                          \cos\alpha\cos\beta &= \frac{\cos(\alpha + \beta) + \cos(\alpha - \beta)}{2} \\
+  \cos(\alpha + \beta) - \cos(\alpha - \beta) &= \cos\alpha\cos\beta - \sin\alpha\sin\beta - \cos\alpha\cos\beta - \sin\alpha\sin\beta \\
+                                              &= -2\sin\alpha\sin\beta \\
+                          \sin\alpha\sin\beta &= \frac{\cos(\alpha - \beta) - \cos(\alpha + \beta)}{2}
+\end{align}
+
+Double Angle Formulae Derived from Euler's Formula
+--------------------------------------------------
+
+\begin{align}
+  e^{i2\theta} &= e^{i\theta} \cdot e^{i\theta} \\
+  \cos(2\theta) + i\sin(2\theta) &= (\cos \theta + i\sin \theta)(\cos \theta + i\sin \theta) \\
+  &= \cos^2\theta - \sin^2\theta + i2\sin\theta\cos\theta \\
+  \cos(2\theta) &= \cos^2\theta - \sin^2\theta \\
+  \sin(2\theta) &= 2\sin\theta\cos\theta
+\end{align}
+
+
+
+
+</textarea>
+</div>
+<div id="div_downloadhtml"></div>
+<div id="div_downloadeqn"></div>
+<script>
+window.onload=function(e){
+    var renderer = new MathJaxMarkdownRenderer();
+    var div_html=document.getElementById("div_html");
+    div_html.style.display='none'; 
+    renderer.render(function(){
+        // Enable display of rendered output
+        div_html.style.display='block';
+    });
+};
+</script>
+</body>
+</html>
