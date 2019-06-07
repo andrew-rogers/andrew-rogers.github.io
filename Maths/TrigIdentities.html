@@ -26,19 +26,24 @@ Euler's Formula
 Ptolemy’s Identities Derived from Euler's Formula
 -------------------------------------------------
 
+### Sum Formulae
+
 \begin{align}
-  e^{i(\alpha + \beta)} &= e^{i\alpha} \cdot e^{i\beta} \\
+                         e^{i(\alpha + \beta)} &= e^{i\alpha} \cdot e^{i\beta} \\
   \cos(\alpha + \beta) + i\sin(\alpha + \beta) &= (\cos \alpha + i\sin \alpha)(\cos \beta + i\sin \beta) \\
-                                               &= \cos\alpha\cos\beta-\sin\alpha\sin\beta + i(\sin\alpha\cos\beta+\cos\alpha\sin\beta) \\
-  \cos(\alpha + \beta) &= \cos\alpha\cos\beta-\sin\alpha\sin\beta \\
-  \sin(\alpha + \beta) &= \sin\alpha\cos\beta+\cos\alpha\sin\beta
+                                               &= \cos\alpha\cos\beta - \sin\alpha\sin\beta + i(\sin\alpha\cos\beta + \cos\alpha\sin\beta) \\
+                          \cos(\alpha + \beta) &= \cos\alpha\cos\beta - \sin\alpha\sin\beta \\
+                          \sin(\alpha + \beta) &= \sin\alpha\cos\beta + \cos\alpha\sin\beta
 \end{align}
 
 ### Difference Formulae
-Difference Formulae are found by substituting $\beta=-\beta$ into the above formulae.
+
 \begin{align}
-  \cos(\alpha - \beta) &= \cos\alpha\cos\beta+\sin\alpha\sin\beta \\
-  \sin(\alpha - \beta) &= \sin\alpha\cos\beta-\cos\alpha\sin\beta
+                         e^{i(\alpha - \beta)} &= e^{i\alpha} \cdot e^{-i\beta} \\
+  \cos(\alpha - \beta) + i\sin(\alpha - \beta) &= (\cos \alpha + i\sin \alpha)(\cos \beta - i\sin \beta) \\
+                                               &= \cos\alpha\cos\beta+\sin\alpha\sin\beta + i(\sin\alpha\cos\beta-\cos\alpha\sin\beta) \\
+                          \cos(\alpha - \beta) &= \cos\alpha\cos\beta + \sin\alpha\sin\beta \\
+                          \sin(\alpha - \beta) &= \sin\alpha\cos\beta - \cos\alpha\sin\beta
 \end{align}
 
 ### Product Identities
@@ -48,7 +53,13 @@ Difference Formulae are found by substituting $\beta=-\beta$ into the above form
                           \cos\alpha\cos\beta &= \frac{\cos(\alpha + \beta) + \cos(\alpha - \beta)}{2} \\
   \cos(\alpha + \beta) - \cos(\alpha - \beta) &= \cos\alpha\cos\beta - \sin\alpha\sin\beta - \cos\alpha\cos\beta - \sin\alpha\sin\beta \\
                                               &= -2\sin\alpha\sin\beta \\
-                          \sin\alpha\sin\beta &= \frac{\cos(\alpha - \beta) - \cos(\alpha + \beta)}{2}
+                          \sin\alpha\sin\beta &= \frac{\cos(\alpha - \beta) - \cos(\alpha + \beta)}{2} \\
+  \sin(\alpha + \beta) + \sin(\alpha - \beta) &= \sin\alpha\cos\beta + \cos\alpha\sin\beta + \sin\alpha\cos\beta - \cos\alpha\sin\beta \\
+                                              &= 2\sin\alpha\cos\beta \\
+                          \sin\alpha\cos\beta &= \frac{\sin(\alpha + \beta) + \sin(\alpha - \beta)}{2} \\
+  \sin(\alpha + \beta) - \sin(\alpha - \beta) &= \sin\alpha\cos\beta + \cos\alpha\sin\beta - \sin\alpha\cos\beta + \cos\alpha\sin\beta \\
+                                              &= 2\cos\alpha\sin\beta \\
+                           \cos\alpha\sin\beta &= \frac{\sin(\alpha + \beta) - \sin(\alpha - \beta)}{2}
 \end{align}
 
 Double Angle Formulae Derived from Euler's Formula
