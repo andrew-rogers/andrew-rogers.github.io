@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width">
+        <title>Sawtooth audio example</title>  
+    </head>
+
+    <body>
+        <button>Play sawtooth</button>
+    </body>
+
+    <script>
+
+// Get the sample rate of the audio.
+var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+var fs = audioCtx.sampleRate;
+
+// One second buffer.
+var num_samples = fs * 1.0;
+var audio_buffer = audioCtx.createBuffer(1, num_samples, fs);
+
+// Create the sawtooth samples.
+//     
+//    /|  /|  /|  /|  /|
+//   / | / | / | / | / |
+//  /  |/  |/  |/  |/  |
+//     
+var samples = audio_buffer.getChannelData(0);
+for (var i = 0; i < num_samples; i++) {
+    samples[i] = (i/100)%2 - 1; // Creates a ramp up and fast falling edge.
+}
+
+var button = document.querySelector('button');
+button.onclick = function() {
+
+    // Disable button so user knows it has been pressed.
+    button.disabled = true;
+    
+    // Create the source buffer and play it out the speakers.
+    var source = audioCtx.createBufferSource();
+    source.buffer = audio_buffer;
+    source.connect(audioCtx.destination);
+    source.start();
+
+    // Enable the play button when done.
+    source.onended = () => {
+        button.disabled = false;
+    }
+}
+    </script>
+</html>
