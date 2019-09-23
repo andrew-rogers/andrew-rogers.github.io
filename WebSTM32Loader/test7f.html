@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width">
+        <title>Baud rate acquisition</title>  
+    </head>
+
+    <body>
+        <button>Play 0x7F</button>
+    </body>
+
+    <script>
+
+/**
+ *
+ * @licstart  The following is the entire license notice for the 
+ *  JavaScript code in this page.
+ *
+ * Copyright (C) 2019  Andrew Rogers
+ *
+ *
+ * The JavaScript code in this page is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU
+ * General Public License (GNU GPL) as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option)
+ * any later version.  The code is distributed WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+ *
+ * As additional permission under GNU GPL version 3 section 7, you
+ * may distribute non-source (e.g., minimized or compacted) forms of
+ * that code without the copy of the GNU GPL normally required by
+ * section 4, provided you include this license notice and a URL
+ * through which recipients can access the Corresponding Source.
+ *
+ * @licend  The above is the entire license notice
+ * for the JavaScript code in this page.
+ *
+ */
+
+
+function byte2samples(samples,offset,byte)
+{
+    var oversampling=16;
+    var parity=0;
+    var n=offset;
+    for( var k=0; k<oversampling; k++) samples[n++]=-1; // Start bit
+    for(var j=0; j<8; j++) {
+        var bit=(byte>j)&1;
+        parity+=bit;
+        for( var k=0; k<oversampling; k++) samples[n++]=2*bit-1; // Data bits
+    }
+    parity=parity&1;
+    for( var k=0; k<oversampling; k++) samples[n++]=2*parity-1; // Even parity bit
+    for( var k=0; k<oversampling; k++) samples[n++]=1; // Stop bit
+}
+
+
+
+var num_samples=441000;
+
+// Get the sample rate of the audio.
+var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+var fs = audioCtx.sampleRate;
+
+var audio_buffer = audioCtx.createBuffer(1, num_samples, fs);
+
+
+var samples = audio_buffer.getChannelData(0);
+for (var i = 0; i < num_samples; i++) {
+    samples[i] = 1;
+}
+
+for (var i=0; i<=(num_samples-10000); i+=10000) {
+    byte2samples(samples, i, 0x7f);
+}
+
+var button = document.querySelector('button');
+button.onclick = function() {
+
+    // Disable button so user knows it has been pressed.
+    button.disabled = true;
+    
+    // Create the source buffer and play it out the speakers.
+    var source = audioCtx.createBufferSource();
+    source.buffer = audio_buffer;
+    source.connect(audioCtx.destination);
+    source.start();
+
+    // Enable the play button when done.
+    source.onended = () => {
+        button.disabled = false;
+    }
+}
+    </script>
+</html>
