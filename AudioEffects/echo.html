@@ -8,6 +8,7 @@
 
     <body>
         <button id="button_start">Start</button>
+        <button id="button_stop">Stop</button>
         <script>
 
 navigator.getUserMedia = (navigator.getUserMedia ||
@@ -16,6 +17,7 @@ navigator.getUserMedia = (navigator.getUserMedia ||
                           navigator.msGetUserMedia);
 
 var button_start = document.getElementById('button_start');
+var button_stop = document.getElementById('button_stop');
       
 var audioCtx = new AudioContext();
 
@@ -58,6 +60,12 @@ var initialiseAudioGraph = function(media) {
     button_start.onclick = function() {
         source.connect(spn);
         spn.connect(audioCtx.destination);
+    }
+
+    // Stop button click handler
+    button_stop.onclick = function() {
+        source.disconnect(spn);
+        spn.disconnect(audioCtx.destination);
     }
       
       
