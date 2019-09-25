@@ -3,7 +3,8 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width">
-        <title>Echo using ScriptProcessorNode</title>  
+        <title>Echo using ScriptProcessorNode</title>
+        <script type="text/javascript" src="duplexaudio.js"></script>
     </head>
 
     <body>
@@ -11,76 +12,77 @@
         <button id="button_stop">Stop</button>
         <script>
 
-navigator.getUserMedia = (navigator.getUserMedia ||
-                          navigator.webkitGetUserMedia ||
-                          navigator.mozGetUserMedia ||
-                          navigator.msGetUserMedia);
+/**
+ *
+ * @licstart  The following is the entire license notice for the 
+ *  JavaScript code in this page.
+ *
+ * Copyright (C) 2019  Andrew Rogers
+ *
+ *
+ * The JavaScript code in this page is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU
+ * General Public License (GNU GPL) as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option)
+ * any later version.  The code is distributed WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+ *
+ * As additional permission under GNU GPL version 3 section 7, you
+ * may distribute non-source (e.g., minimized or compacted) forms of
+ * that code without the copy of the GNU GPL normally required by
+ * section 4, provided you include this license notice and a URL
+ * through which recipients can access the Corresponding Source.
+ *
+ * @licend  The above is the entire license notice
+ * for the JavaScript code in this page.
+ *
+ */
 
 var button_start = document.getElementById('button_start');
 var button_stop = document.getElementById('button_stop');
-      
-var audioCtx = new AudioContext();
 
-var processSamples = function(input, output) {
-    var N2 = input.length/2;
+// Delay buffers
+var buffer_size = 4096;
+var num_buffers=30;
+var input=[[]];
+for (var b=0; b<num_buffers; b++){
+    input[b]=[];
+    for (var n=0; n<buffer_size; n++) input[b][n]=0.0;
+}
+var cnt=0;
+
+var processAudio = function(e) {
+    var channel = 0;
+    input[cnt] = e.inputBuffer.getChannelData(channel);
+    var output = e.outputBuffer.getChannelData(channel);
+
+    cnt=(cnt+1)%num_buffers;
+    inp=input[cnt];
+    var N2 = inp.length/2;
     for (var n = 0; n < N2; n++) {
 
         // Simple pitch doubler
-        output[n] = input[n*2];
-        output[N2+n] = input[n*2+1];     
+        output[n] = inp[n*2];
+        output[N2+n] = inp[n*2+1];
     }
 };
 
-var initialiseAudioGraph = function(media) {
-    var source = audioCtx.createMediaStreamSource(media);
-
-    // Create the ScriptProcessorNode
-    var buffer_size = 4096;
-    var spn = audioCtx.createScriptProcessor(buffer_size, 1, 1);
-
-    // Delay buffers
-    var num_buffers=30;
-    var input=[[]];
-    for (var b=0; b<num_buffers; b++){
-        input[b]=[];
-        for (var n=0; n<buffer_size; n++) input[b][n]=0.0;
-    }
-    var cnt=0;
-
-    spn.onaudioprocess = function(e) {
-        var channel = 0;
-        input[cnt] = e.inputBuffer.getChannelData(channel);
-        var output = e.outputBuffer.getChannelData(channel);
-
-        cnt=(cnt+1)%num_buffers;
-        processSamples(input[cnt], output);
-    }
+var init = function(media) {
 
     // Start button click handler
     button_start.onclick = function() {
-        source.connect(spn);
-        spn.connect(audioCtx.destination);
+        duplexAudio.start();
     }
 
     // Stop button click handler
     button_stop.onclick = function() {
-        source.disconnect(spn);
-        spn.disconnect(audioCtx.destination);
+        duplexAudio.stop();
     }
-      
-      
 };
 
-   
+var duplexAudio = new DuplexAudio(buffer_size, init, processAudio);
 
-var constraints = { video: false, audio: true };
-
-navigator.getUserMedia(constraints, initialiseAudioGraph, function(err) {
-    // errorCallback
-    console.log("getUserMedia(): " + err);
-});
-      
-      
         </script>
     </body>
 </html>
