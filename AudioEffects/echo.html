@@ -35,13 +35,23 @@ var initialiseAudioGraph = function(media) {
     // Create the ScriptProcessorNode
     var buffer_size = 4096;
     var spn = audioCtx.createScriptProcessor(buffer_size, 1, 1);
-      
+
+    // Delay buffers
+    var num_buffers=30;
+    var input=[[]];
+    for (var b=0; b<num_buffers; b++){
+        input[b]=[];
+        for (var n=0; n<buffer_size; n++) input[b][n]=0.0;
+    }
+    var cnt=0;
+
     spn.onaudioprocess = function(e) {
         var channel = 0;
-        var input = e.inputBuffer.getChannelData(channel);
+        input[cnt] = e.inputBuffer.getChannelData(channel);
         var output = e.outputBuffer.getChannelData(channel);
 
-        processSamples(input, output);        
+        cnt=(cnt+1)%num_buffers;
+        processSamples(input[cnt], output);
     }
 
     // Start button click handler
