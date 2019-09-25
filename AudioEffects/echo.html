@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width">
+        <title>Echo using ScriptProcessorNode</title>  
+    </head>
+
+    <body>
+        <button id="button_start">Start</button>
+        <script>
+
+navigator.getUserMedia = (navigator.getUserMedia ||
+                          navigator.webkitGetUserMedia ||
+                          navigator.mozGetUserMedia ||
+                          navigator.msGetUserMedia);
+
+var button_start = document.getElementById('button_start');
+      
+var audioCtx = new AudioContext();
+
+var processSamples = function(input, output) {
+    var N2 = input.length/2;
+    for (var n = 0; n < N2; n++) {
+
+        // Simple pitch doubler
+        output[n] = input[n*2];
+        output[N2+n] = input[n*2+1];     
+    }
+};
+
+var initialiseAudioGraph = function(media) {
+    var source = audioCtx.createMediaStreamSource(media);
+
+    // Create the ScriptProcessorNode
+    var buffer_size = 4096;
+    var spn = audioCtx.createScriptProcessor(buffer_size, 1, 1);
+      
+    spn.onaudioprocess = function(e) {
+        var channel = 0;
+        var input = e.inputBuffer.getChannelData(channel);
+        var output = e.outputBuffer.getChannelData(channel);
+
+        processSamples(input, output);        
+    }
+
+    // Start button click handler
+    button_start.onclick = function() {
+        source.connect(spn);
+        spn.connect(audioCtx.destination);
+    }
+      
+      
+};
+
+   
+
+var constraints = { video: false, audio: true };
+
+navigator.getUserMedia(constraints, initialiseAudioGraph, function(err) {
+    // errorCallback
+    console.log("getUserMedia(): " + err);
+});
+      
+      
+        </script>
+    </body>
+</html>
+
