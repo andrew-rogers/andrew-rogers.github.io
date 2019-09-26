@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" charset="UTF-8">
+
+<script src="../MJMD/MathJaxMarkdownRenderer.js"></script>
+<script src="../MJMD/marked.js"></script>
+<script src="../MJMD/svgarray.js"></script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG"></script>
+</head>
+<body>
+
+<div id="div_html"></div>
+<div id="div_md">
+<textarea id="ta_edit" rows="30" cols="100" style="display:none;">
+WebSTM32Loader
+==============
+
+WebSTM32Loader is a web browser based STM32 bootloader interface designed to work from the web browser on a mobile device. The communication to the STM32 microcontroller is via the audio jack and a simple level convertor circuit.
+
+Background
+----------
+
+Desire to be able to experiment with microcontrollers without the need for a PC or laptop, using a mobile device.
+    
+### Bluetooth
+
+Use of a HC-05 module seemed the first logical approach to connect the STM32 to the mobile device. The STM32 has a UART bootloader permanently etched into ROM and so it's easy to connect to a HC-05 module. The problem is that the HC-05 module needs to be configured to support even parity as required by the STM32 bootloader, this can only be done via the UART pins on the HC-05 module. A second HC-05 can't be used to configure the other as when in AT mode a baud rate of 38400 is required, the data mode is 9600 baud. Without a PC the user is dependant on someone else with a PC to at least configure the HC-05 module. We need some other way to bootload the STM32, we could subsequently then configure the HC-05 using the STM32 if we still want bluetooth.
+
+### Audio Jack
+
+The audio output is almost an arbitrary waveform generator so it could output the UART signal right? Well not quite, DC does not pass through. This means that it can not directly support the idle state of a UART line. The electronics required to support the connection has to be simple and contain no programmable parts (how would we program them?). Ideally the circuit needs to be easy to construct and testable without an oscilloscope. Eventually an edge-detect circuit was built based on a CMOS logic CD4011 (CD4069 could also be used) chip. The circuit's output is set or reset dependant on receiving a rising or falling edge in the audio signal.
+
+There are limitations to this approach, first is that with an upper limit of 20kHz we can hardly expect fast edges and limits the baud rate to around ten times lower than the sample rate. Secondly to support standard baud rates using a 44100Hz sample rate would require non-integer sample rate conversion. Fortunately the STM32 bootloader is not limited to standard baud rate, it times the duration between two pulses it receives on its RXD line to determine baud rate. There is a lower limit of 1200 for baud rate so we must, at least, achieve that. A starting point of 16 samples per bit was used producing a baud rate of $b=f_s/16=44100/16=2756.25~\mathrm{bps}$. A wav file was created that played the UART pattern ...111111101111111011111111... repeatedly for a minute to see if the STM32 would acknowledge this. After a few experiments with the volume setting, the STM32 responded, success!
+
+To be honest, I cheated somewhat. I used GNU Octave on a PC to synthesize the wav file. Without being able to synthesize the signal locally on the mobile device I would be defeated, and that does not happen, ever! I looked into creating an Android app but this lead to OpenSL ES that would require installation of an NDK on a PC. Not necessarily a limitation as I could release an APK binary but for people without a PC they have a binary blob that they can't control. I really want my work to be as transparent as possible. This is where [Web Audio API](https://www.w3.org/TR/webaudio/) comes to the rescue.
+
+#### Web Audio API
+
+I found a [demo of a scope](https://github.com/fadams/webaudio-scope) that drew wobbly lines in a canvas on the browser when I touched the MIC input wire. I knew from that point on I could do all I want with just HTML and JavaScript in Firefox. Sceptical at first, I quickly grew to love this approach for its amazing flexibility and accessibility for people with mobile devices. All that is required to write HTML and JavaScript is a text editor, almost any text editor. Eventually we'd be able to do things like light LED's from a button in the browser. Peripheral registers could be displayed in the browser and we would be able to configure peripherals live! Truly awesome and endless possibilities. Combine this with the possibility of installing Espruino on the STM32 for an end-to-end JavaScript system, and...
+
+Whilst learning about the Web Audio API I wrote a little echo demo that can be found [here](../AudioEffects/echo.html).
+
+
+</textarea>
+</div>
+<div id="div_downloadhtml"></div>
+<div id="div_downloadeqn"></div>
+<script>
+window.onload=function(e){
+    var renderer = new MathJaxMarkdownRenderer();
+    var div_html=document.getElementById("div_html");
+    div_html.style.display='none'; 
+    renderer.render(function(){
+        // Enable display of rendered output
+        div_html.style.display='block';
+    });
+};
+</script>
+</body>
+</html>
