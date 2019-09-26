@@ -44,21 +44,23 @@ var button_stop = document.getElementById('button_stop');
 
 // Delay buffers
 var buffer_size = 4096;
-var num_buffers=30;
-var input=[[]];
-for (var b=0; b<num_buffers; b++){
-    input[b]=[];
-    for (var n=0; n<buffer_size; n++) input[b][n]=0.0;
-}
-var cnt=0;
+var num_buffers = 30;
 
-var processAudio = function(e) {
-    var channel = 0;
-    input[cnt] = e.inputBuffer.getChannelData(channel);
-    var output = e.outputBuffer.getChannelData(channel);
+var Echo = function(buffer_size, num_buffers) {
+    this.buffer_size = buffer_size;
+    this.num_buffers = num_buffers;
+    this.input=[[]];
+    for (var b=0; b<num_buffers; b++){
+        this.input[b]=[];
+        for (var n=0; n<buffer_size; n++) this.input[b][n]=0.0;
+    }
+    this.cnt=0;
+};
 
-    cnt=(cnt+1)%num_buffers;
-    inp=input[cnt];
+Echo.prototype.processAudio = function(inp, output) {
+    this.input[this.cnt] = inp;
+    this.cnt=(this.cnt+1)%this.num_buffers;
+    inp=this.input[this.cnt];
     var N2 = inp.length/2;
     for (var n = 0; n < N2; n++) {
 
@@ -81,7 +83,13 @@ var init = function(media) {
     }
 };
 
-var duplexAudio = new DuplexAudio(buffer_size, init, processAudio);
+var samplesCallback = function(ip, op) {
+    echo.processAudio(ip, op);
+};
+
+var echo = new Echo(buffer_size, num_buffers);
+
+var duplexAudio = new DuplexAudio(buffer_size, init, samplesCallback);
 
         </script>
     </body>

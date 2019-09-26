@@ -55,7 +55,10 @@ DuplexAudio.prototype.initialiseAudioGraph=function(media) {
 
     var that = this;
     this.spn.onaudioprocess = function(e) {
-        that.callback_process_samples(e);
+        var channel = 0;
+        var input = e.inputBuffer.getChannelData(channel);
+        var output = e.outputBuffer.getChannelData(channel);
+        that.callback_process_samples(input, output);
     }
 
     this.callback_init(media);
