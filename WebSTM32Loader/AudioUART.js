@@ -41,13 +41,44 @@ var AudioUART = function() {
     };
 
     this.duplexAudio = new DuplexAudio(buffer_size, init, samplesCallback);
+
+    this.bit_queue=[];
+    this.sample_cnt=0;
+    this.samples_per_bit=16;
+    this.bit = 1;
 };
 
 AudioUART.prototype.processAudio = function(inp, output) {
+
+    var sample_cnt = this.sample_cnt;
+    var samples_per_bit = this.samples_per_bit
+    var bit_queue = this.bit_queue;
+
+    var bit_cnt = 0;
+    var bit = this.bit;
+
+    // The sample loop
     for (var n = 0; n < output.length; n++) {
 
-        // Sawtooth for now
-        output[n] = (n/256)%2-1.0;
+        if(sample_cnt==0) {
+
+            // Get the next bit from bit queue
+            if(bit_cnt<bit_queue.length) bit = bit_queue[bit_cnt++]
+            else bit = 1; // If no bits in queue idle high
+            sample_cnt = samples_per_bit;
+        }
+        sample_cnt--;
+
+        output[n] = bit * 2.0 - 1.0;
     }
+
+    this.bit = bit; // Save the current bit in case it has only been partly synthesised
+
+    this.sample_cnt = sample_cnt;
+
+    this.bit_queue = bit_queue.slice(bit_cnt); // Remove the bits that have been converted from the queue
+
+    // For now just fill buffer with 0x7F with long idle for Baud Acquisition test. Replace with callback API.
+    if(this.bit_queue.length==0)this.bit_queue=[ 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,];
 };
 
