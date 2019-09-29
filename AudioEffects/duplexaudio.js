@@ -35,7 +35,12 @@ var DuplexAudio=function(buffer_size, callback_init, callback_process_samples) {
                              navigator.mozGetUserMedia ||
                              navigator.msGetUserMedia);
 
-    var constraints = { video: false, audio: true };
+    var constraints = { video: false, audio: {
+        echoCancellation: false,
+        noiseSuppression: true,
+        autoGainControl: false
+    }};
+
     var that = this;
     navigator.getUserMedia(constraints, function(media) {that.initialiseAudioGraph(media);}, function(err) {
         // errorCallback
