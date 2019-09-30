@@ -24,6 +24,8 @@ fp=fopen("sig_detect.vec")
   rx=fscanf(fp,"%f");
 fclose(fp)
 
+rx=rx(4500:5000);
+
 % Just plot it
 plot(rx);
 
@@ -33,3 +35,12 @@ pkg load signal
 rxf=filter(b,a,rx);
 hold on
 plot(rxf);
+
+% Create clean signal for STM32 USART bootloader NACK
+nack=[ 1 1 1 0 1 1 1 1 1 0 0 0 1 1 1 1 1];
+nack_sig=repelem(nack*2-1,1,M);
+offset=75;
+nack_sig=[ones(1,offset) nack_sig ones(1,length(rx)-length(nack_sig)-offset)];
+plot(nack_sig);
+
+legend({"Rx sig","Filtered","Clean NACK"});
