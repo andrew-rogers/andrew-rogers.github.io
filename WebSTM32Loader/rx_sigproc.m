@@ -36,6 +36,11 @@ rxf=filter(b,a,rx);
 hold on
 plot(rxf);
 
+% Edge detect filter
+b=[1 -1]
+rxe=M*filter(b,1,rxf);
+plot(rxe);
+
 % Create clean signal for STM32 USART bootloader NACK
 nack=[ 1 1 1 0 1 1 1 1 1 0 0 0 1 1 1 1 1];
 nack_sig=repelem(nack*2-1,1,M);
@@ -43,4 +48,4 @@ offset=75;
 nack_sig=[ones(1,offset) nack_sig ones(1,length(rx)-length(nack_sig)-offset)];
 plot(nack_sig);
 
-legend({"Rx sig","Filtered","Clean NACK"});
+legend({"Rx sig","Filtered","Edge detect","Clean NACK"});
