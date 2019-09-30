@@ -37,7 +37,8 @@ var AudioUART = function() {
     };
 
     var samplesCallback = function(ip, op) {
-        that.processAudio(ip, op);
+        that.processTx(op);
+        that.processRx(ip);
     };
 
     this.duplexAudio = new DuplexAudio(buffer_size, init, samplesCallback);
@@ -46,9 +47,10 @@ var AudioUART = function() {
     this.sample_cnt=0;
     this.samples_per_bit=16;
     this.bit = 1;
+    this.capture=[];
 };
 
-AudioUART.prototype.processAudio = function(inp, output) {
+AudioUART.prototype.processTx = function(output) {
 
     var sample_cnt = this.sample_cnt;
     var samples_per_bit = this.samples_per_bit
@@ -80,5 +82,10 @@ AudioUART.prototype.processAudio = function(inp, output) {
 
     // For now just fill buffer with 0x7F with long idle for Baud Acquisition test. Replace with callback API.
     if(this.bit_queue.length==0)this.bit_queue=[ 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,];
+};
+
+AudioUART.prototype.processRx = function(input) {
+    if (this.capture.length >40) this.duplexAudio.stop(); // Stop after four seconds of capture
+    this.capture=this.capture.concat(input);
 };
 

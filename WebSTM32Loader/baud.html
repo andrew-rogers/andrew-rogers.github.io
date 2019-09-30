@@ -9,8 +9,8 @@
     </head>
 
     <body>
-        <button id="button_start">Start</button>
-        <button id="button_stop">Stop</button>
+        <button id="button_gb">Get buffer</button>
+        <div id="div_download"></div>
         <script>
 
 /**
@@ -40,10 +40,30 @@
  *
  */
 
-var button_start = document.getElementById('button_start');
-var button_stop = document.getElementById('button_stop');
+var button_gb = document.getElementById('button_gb');
 
 var uart = new AudioUART();
+
+
+// Stop button click handler
+button_gb.onclick = function() {
+    buffer=uart.capture;
+    data=[]
+    var k=0;
+    str="";
+    for (var b=0; b<buffer.length; b++) {
+        var buf=buffer[b];
+        for (n=0; n<buf.length; n++) {
+            data[k++] = (buf[n]*32767) | 0; // Convert Float32 to 16-bit range integer
+            str=str+((buf[n]*32767) | 0)+"\n";
+        }
+    }
+    var blob=new Blob([str]);
+    var url = URL.createObjectURL(blob);
+    var fn = "sig_rx.vec"
+    var a_download = '<a href="' + url + '" download="' + fn + '">Download "' + fn + '"</a>';
+    document.getElementById("div_download").innerHTML=a_download;
+}
 
 
         </script>
