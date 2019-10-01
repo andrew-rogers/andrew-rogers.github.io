@@ -25,24 +25,7 @@
  *
  */
 
-var button_start = document.getElementById('button_start');
-var button_stop = document.getElementById('button_stop');
-
 var AudioUART = function() {
-    var buffer_size = 4096;
-
-    var that = this;
-    var init = function(media) {
-        that.duplexAudio.start();
-    };
-
-    var samplesCallback = function(ip, op) {
-        that.processTx(op);
-        that.processRx(ip);
-    };
-
-    this.duplexAudio = new DuplexAudio(buffer_size, init, samplesCallback);
-
     this.bit_queue=[];
     this.sample_cnt=0;
     this.samples_per_bit=16;
@@ -85,7 +68,6 @@ AudioUART.prototype.processTx = function(output) {
 };
 
 AudioUART.prototype.processRx = function(input) {
-    if (this.capture.length >40) this.duplexAudio.stop(); // Stop after four seconds of capture
     this.capture=this.capture.concat(input);
 };
 

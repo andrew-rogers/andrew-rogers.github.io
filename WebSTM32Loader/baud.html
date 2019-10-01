@@ -45,6 +45,26 @@ var button_gb = document.getElementById('button_gb');
 var uart = new AudioUART();
 
 
+// --- DuplexAudio setup --------------
+
+var init = function(media) {
+    duplexAudio.start();
+};
+
+
+var samplesCallback = function(ip, op) {
+    uart.processTx(op);
+    uart.processRx(ip);
+    if (uart.capture.length >40) duplexAudio.stop(); // Stop after four seconds of capture
+};
+
+var buffer_size = 4096;
+
+var duplexAudio = new DuplexAudio(buffer_size, init, samplesCallback);
+
+// ------------------------------------
+
+
 // Stop button click handler
 button_gb.onclick = function() {
     buffer=uart.capture;
