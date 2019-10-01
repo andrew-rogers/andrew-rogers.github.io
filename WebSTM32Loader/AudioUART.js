@@ -30,7 +30,6 @@ var AudioUART = function() {
     this.sample_cnt=0;
     this.samples_per_bit=16;
     this.bit = 1;
-    this.capture=[];
 };
 
 AudioUART.prototype.processTx = function(output) {
@@ -68,6 +67,5 @@ AudioUART.prototype.processTx = function(output) {
 };
 
 AudioUART.prototype.processRx = function(input) {
-    this.capture=this.capture.concat(input);
 };
 

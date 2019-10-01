@@ -44,6 +44,7 @@ var button_gb = document.getElementById('button_gb');
 
 var uart = new AudioUART();
 
+var capture=[];
 
 // --- DuplexAudio setup --------------
 
@@ -54,8 +55,9 @@ var init = function(media) {
 
 var samplesCallback = function(ip, op) {
     uart.processTx(op);
-    uart.processRx(ip);
-    if (uart.capture.length >40) duplexAudio.stop(); // Stop after four seconds of capture
+    //uart.processRx(ip);
+    capture=capture.concat(ip)
+    if (capture.length >40) duplexAudio.stop(); // Stop after four seconds of capture
 };
 
 var buffer_size = 4096;
@@ -67,12 +69,11 @@ var duplexAudio = new DuplexAudio(buffer_size, init, samplesCallback);
 
 // Stop button click handler
 button_gb.onclick = function() {
-    buffer=uart.capture;
     data=[]
     var k=0;
     str="";
-    for (var b=0; b<buffer.length; b++) {
-        var buf=buffer[b];
+    for (var b=0; b<capture.length; b++) {
+        var buf=capture[b];
         for (n=0; n<buf.length; n++) {
             data[k++] = (buf[n]*32767) | 0; // Convert Float32 to 16-bit range integer
             str=str+((buf[n]*32767) | 0)+"\n";
