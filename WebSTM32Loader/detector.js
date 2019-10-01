@@ -27,53 +27,9 @@
 
 var fs = require('fs');
 
-var UartRx = function() {
-    var samples_per_bit=16;
-    this.tail=samples_per_bit*11; // Number of samples to record after signal detect
-    this.tail_cnt=0;
-    this.buffers=[];
-    this.out=[];
-};
+eval(''+fs.readFileSync('AudioUART.js'));
 
-UartRx.prototype.processRx = function(input) {
-    var save=false;
-    var threshold=0.05;
-
-    var cnt=this.tail_cnt;
-
-    for (var n=0; n<input.length; n++) {
-        if (input[n]>threshold || input[n]<-threshold) cnt=this.tail;
-        if (cnt>0) {
-            save = true;
-            cnt--;
-        }
-    }
-    this.tail_cnt=cnt;
-    if (save) {
-        this.buffers.push(input);
-    }
-    else if (this.buffers.length>0) {
-        buffers=this.buffers;
-        this.processBuffers();
-        this.buffers = [];
-    }
-};
-
-UartRx.prototype.processBuffers = function() {
-    for (var b=0; b<this.buffers.length; b++) {
-        var buf = this.buffers[b];
-        var out=this.out;
-
-        // TODO: Replace with filtering and bit detection. For now just output the samples for analysis in GNU/Octave
-        for (var n=0; n<buf.length; n++) {
-            out.push(buf[n]);
-        }
-    }
-    
-};
-
-
-var uartRx = new UartRx();
+var uartRx = new AudioUART();
 
 fs.readFile('sig_rx.vec','ascii', function(err, data) {
     data=data.split("\n"); // Convert file to array of numbers
