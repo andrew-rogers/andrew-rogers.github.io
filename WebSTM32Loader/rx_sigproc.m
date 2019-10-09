@@ -24,8 +24,6 @@ fp=fopen("sig_detect.vec")
   rx=fscanf(fp,"%f");
 fclose(fp)
 
-rx=rx(4500:5000);
-
 % Just plot it
 plot(rx);
 
@@ -39,7 +37,12 @@ plot(rxf);
 % Edge detect filter
 b=[1 -1]
 rxe=M*filter(b,1,rxf);
-plot(rxe);
+
+b=[0.1 0 -0.1]
+w=2*pi*1/M;
+a=poly(0.99*exp(i*[w -w]));
+rxe=filter(b,a,rxe.^2);
+plot(rxe)
 
 % Create clean signal for STM32 USART bootloader NACK
 nack=[ 1 1 1 0 1 1 1 1 1 0 0 0 1 1 1 1 1];
