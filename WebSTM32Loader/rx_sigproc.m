@@ -44,11 +44,40 @@ a=poly(0.99*exp(i*[w -w]));
 rxe=filter(b,a,rxe.^2);
 plot(rxe)
 
-% Create clean signal for STM32 USART bootloader NACK
-nack=[ 1 1 1 0 1 1 1 1 1 0 0 0 1 1 1 1 1];
-nack_sig=repelem(nack*2-1,1,M);
-offset=75;
-nack_sig=[ones(1,offset) nack_sig ones(1,length(rx)-length(nack_sig)-offset)];
-plot(nack_sig);
+% Resample on negative zero-crossing of edge detector
+rx_dec=zeros(1,length(rxe));
+k=1;
+prev=0;
+for n=1:length(rxe)-1
+  if rxe(n)>=0 && rxe(n+1)<0
+    rx_dec(k)=rxf(n)-prev; % Differential to get peaks for transitions
+    prev=rxf(n);
+    k=k+1;
+  endif
+endfor
+rx_dec=rx_dec(1:k-1);
 
-legend({"Rx sig","Filtered","Edge detect","Clean NACK"});
+% Search peaks and flip logic level accordingly
+% Centre of peaks have to be larger than a threshold and both side values must
+%  be below half the amplitude of the centre
+ll=1;
+data=ones(1,length(rx_dec));
+threshold=0.2;
+for n=3:length(rx_dec)
+  l=rx_dec(n-2);
+  c=rx_dec(n-1);
+  r=rx_dec(n);
+  c2=c/2;
+  if c > threshold && c2 > l && c2 > r
+    ll=1;
+  elseif c < -threshold && c2 < l && c2 < r
+    ll=0;
+  endif
+  data(n)=ll;
+endfor
+
+% Interpolate data for plotting
+data_int=repelem(data,1,M);
+plot(data_int(76:end));
+
+legend({"Rx sig","Filtered","Edge detect","Data"});
