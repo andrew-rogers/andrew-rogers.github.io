@@ -35,6 +35,8 @@ var AudioUART = function() {
     this.tail_cnt=0;
     this.buffers=[];
     this.out=[];
+
+    this.lpf = new Biquad(0.008443, 0.016885, 0.008443, -1.723776, 0.757547);
 };
 
 AudioUART.prototype.processTx = function(output) {
@@ -97,7 +99,7 @@ AudioUART.prototype.processRx = function(input) {
 
 AudioUART.prototype.processBuffers = function() {
     for (var b=0; b<this.buffers.length; b++) {
-        var buf = this.buffers[b];
+        var buf = this.lpf.processSamples(this.buffers[b]);
         var out=this.out;
 
         // TODO: Replace with filtering and bit detection. For now just output the samples for analysis in GNU/Octave

@@ -25,35 +25,40 @@
  *
  */
 
-var fs = require('fs');
+// x[n] ---->(+)-------o--->--->(+)---> y[n]
+//            ^        |   b0    ^
+//            |       [ ]        |
+//            |        |         |
+//           (+)<--<---o--->--->(+)
+//            ^   -a1  |   b1    ^
+//            |       [ ]        |
+//            |        |         |
+//            '----<---o--->-----'
+//                -a2      b2
 
-eval(''+fs.readFileSync('Biquad.js'));
-eval(''+fs.readFileSync('AudioUART.js'));
-
-var uartRx = new AudioUART();
-
-fs.readFile('sig_rx.vec','ascii', function(err, data) {
-    data=data.split("\n"); // Convert file to array of numbers
-    
-    var buffer_size=4096;
-    
-    // Chop up into Float32Array as WebAudio API would provide
-    for (var b=0; b<data.length+1-buffer_size; b+=buffer_size) {
-        var buf = new Float32Array(buffer_size);
-        for (var n=0; n<buffer_size; n++) {
-            buf[n]=data[b+n]/32767; // Convert 16-bit integers to Float32
-        }
-        uartRx.processRx(buf);
-    }
-    dumpSignal(uartRx.out, "sig_detect.vec")
-});
-
-dumpSignal = function(vec, filename) {
-    var str=""+vec;
-    str=str.split(',').join('\n');
-
-    fs.writeFile(filename, str, function (err) {
-    }); 
+var Biquad = function(b0,b1,b2,a1,a2) {
+    this.b0 = b0;
+    this.b1 = b1;
+    this.b2 = b2;
+    this.a1 = a1;
+    this.a2 = a2;
+    this.w1 = 0;
+    this.w2 = 0;
 };
 
+Biquad.prototype.processSamples = function(input) {
+    var w0;
+    var output=[];
+    for (var n=0; n<input.length; n++) {
+    
+        // MACs
+        w0=input[n] - this.a1*this.w1 - this.a2*this.w2;
+        output[n]=this.b0*w0 + this.b1*this.w1 + this.b2*this.w2;
+        
+        // Delay line shift
+        this.w2 = this.w1;
+        this.w1 = w0;
+    }
+    return output; 
+};
 

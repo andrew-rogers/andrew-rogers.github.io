@@ -20,9 +20,11 @@
 M=16; % 16 samples per bit
 
 % Load the recorded signal
-fp=fopen("sig_detect.vec")
+fp=fopen("sig_rx.vec")
   rx=fscanf(fp,"%f");
 fclose(fp)
+
+rx=rx/32767;
 
 % Just plot it
 plot(rx);
@@ -30,6 +32,7 @@ plot(rx);
 % Low-pass filter to remove high frequency noise
 pkg load signal
 [b,a]=butter(2,1/M);
+printf("LPF coeffs = [ %f, %f, %f, %f, %f ]\n",b(1),b(2),b(3),a(2),a(3));
 rxf=filter(b,a,rx);
 hold on
 plot(rxf);
