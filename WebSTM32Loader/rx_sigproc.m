@@ -26,8 +26,7 @@ fclose(fp)
 
 rx=rx/32767;
 
-% Just plot it
-plot(rx);
+
 
 % Low-pass filter to remove high frequency noise
 pkg load signal
@@ -35,24 +34,27 @@ pkg load signal
 printf("LPF coeffs = [ %f, %f, %f, %f, %f ]\n",b(1),b(2),b(3),a(2),a(3));
 rxf=filter(b,a,rx);
 hold on
-plot(rxf);
 
 % Edge detect filter
-b=[1 -1]
+b=[1 -1] % Differentiator
 rxe=M*filter(b,1,rxf);
 
-b=[0.1 0 -0.1]
+b=[0.1 0 -0.1] % BPF
 w=2*pi*1/M;
-a=poly(0.99*exp(i*[w -w]));
+a=poly(0.99*exp(i*[w -w])); % High Q factor
 rxe=filter(b,a,rxe.^2);
-plot(rxe)
+
+
+% Delay LPFed signal to allow edge detect filter to have good amplitude
+rxf=[zeros(M,1); rxf];
+
 
 % Resample on negative zero-crossing of edge detector
 rx_dec=zeros(1,length(rxe));
 k=1;
 prev=0;
-for n=1:length(rxe)-1
-  if rxe(n)>=0 && rxe(n+1)<0
+for n=2:length(rxe)
+  if rxe(n-1)>=0 && rxe(n)<0
     rx_dec(k)=rxf(n)-prev; % Differential to get peaks for transitions
     prev=rxf(n);
     k=k+1;
@@ -79,8 +81,17 @@ for n=3:length(rx_dec)
   data(n)=ll;
 endfor
 
+
+
+
+% --------------- Plot waveforms ----------------
+plot(rx)
+hold on
+plot(rxf)
+plot(rxe)
+
 % Interpolate data for plotting
 data_int=repelem(data,1,M);
-plot(data_int(76:end));
+plot(data_int(76:end))
 
 legend({"Rx sig","Filtered","Edge detect","Data"});
