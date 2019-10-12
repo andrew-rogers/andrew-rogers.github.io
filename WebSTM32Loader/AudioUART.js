@@ -37,6 +37,8 @@ var AudioUART = function() {
     this.out=[];
 
     this.lpf = new Biquad(0.008443, 0.016885, 0.008443, -1.723776, 0.757547);
+    this.edge_diff = new Differentiator();
+    this.bpf = new Biquad(0.100000, 0.000000, -0.100000, -1.829281, 0.980100);
 };
 
 AudioUART.prototype.processTx = function(output) {
@@ -99,12 +101,19 @@ AudioUART.prototype.processRx = function(input) {
 
 AudioUART.prototype.processBuffers = function() {
     for (var b=0; b<this.buffers.length; b++) {
-        var buf = this.lpf.processSamples(this.buffers[b]);
-        var out=this.out;
+
+        // Low-pass filter received signal
+        var rxf = this.lpf.processSamples(this.buffers[b]);
+
+        // Edge detector and resonator
+        var rxe = this.edge_diff.processSamples(rxf);
+        for (var n=0; n<rxe.length; n++) rxe[n]=rxe[n]*rxe[n];
+        rxe = this.bpf.processSamples(rxe);
 
         // TODO: Replace with filtering and bit detection. For now just output the samples for analysis in GNU/Octave
-        for (var n=0; n<buf.length; n++) {
-            out.push(buf[n]);
+        var out=this.out;
+        for (var n=0; n<rxe.length; n++) {
+            out.push(rxe[n]);
         }
     }
 };

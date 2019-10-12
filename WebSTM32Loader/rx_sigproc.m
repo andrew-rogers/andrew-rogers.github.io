@@ -33,7 +33,6 @@ pkg load signal
 [b,a]=butter(2,1/M);
 printf("LPF coeffs = [ %f, %f, %f, %f, %f ]\n",b(1),b(2),b(3),a(2),a(3));
 rxf=filter(b,a,rx);
-hold on
 
 % Edge detect filter
 b=[1 -1] % Differentiator
@@ -42,6 +41,7 @@ rxe=M*filter(b,1,rxf);
 b=[0.1 0 -0.1] % BPF
 w=2*pi*1/M;
 a=poly(0.99*exp(i*[w -w])); % High Q factor
+printf("BPF coeffs = [ %f, %f, %f, %f, %f ]\n",b(1),b(2),b(3),a(2),a(3));
 rxe=filter(b,a,rxe.^2);
 
 
