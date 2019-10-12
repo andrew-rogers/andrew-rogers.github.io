@@ -47,7 +47,8 @@ fs.readFile('sig_rx.vec','ascii', function(err, data) {
         }
         uartRx.processRx(buf);
     }
-    dumpSignal(uartRx.out, "sig_detect.vec")
+    console.log(uartRx.out);
+    //dumpSignal(uartRx.out, "sig_detect.vec")
 });
 
 dumpSignal = function(vec, filename) {

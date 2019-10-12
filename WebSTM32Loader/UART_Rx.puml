@@ -1,0 +1,24 @@
+@startuml
+[*] --> Stop
+Stop --> Stop : 1
+Stop --> Start : 0
+Start --> Data
+Data --> Data : cnt<9
+Data --> Parity : cnt>=9
+Parity --> Stop : 1
+Parity --> FE : 0
+FE --> FE : 0
+FE --> Stop : 1
+
+Start: data = logic_level
+Start: parity = logic_level
+Start : cnt = 1
+
+Data : data = data | (logic_level << cnt)
+Data : parity += logic_level
+Data : cnt++
+
+Parity : parity = parity & 1
+
+@enduml
+

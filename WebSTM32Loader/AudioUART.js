@@ -36,7 +36,7 @@ var AudioUART = function() {
     this.buffers=[];
     this.out=[];
 
-    this.lpf = new Biquad(0.008443, 0.016885, 0.008443, -1.723776, 0.757547);
+    this.lpf = new Biquad(0.008443, 0.016885, 0.008443, -1.723776, 0.757547); // TODO: Manage inverted signal (use neg. b coeffs.)
     this.edge_diff = new Differentiator();
     this.bpf = new Biquad(0.100000, 0.000000, -0.100000, -1.829281, 0.980100);
     this.delay = new Delay(this.samples_per_bit);
@@ -47,6 +47,12 @@ var AudioUART = function() {
     this.data_diff1 = 0;
     this.data_diff2 = 0;
     this.logic_level = 1;
+
+    // State machine variables
+    this.rx_state = 0;
+    this.rx_cnt = 0;
+    this.rx_data = 0;
+    this.rx_parity = 0;
 };
 
 AudioUART.prototype.processTx = function(output) {
@@ -124,10 +130,13 @@ AudioUART.prototype.processBuffers = function() {
         // Down-sample the signal and get the logic level signal
         var logic_levels = this.downSample(rxe, rxf);
 
-        // TODO: Replace with UART Rx state machine. For now just output the logic level signal for analysis in GNU/Octave
+        // UART state machine
+        var data = this.stateMachine(logic_levels);
+
+        // Concatenate UART Rx objects into output array
         var out=this.out;
-        for (var n=0; n<logic_levels.length; n++) {
-            out.push(logic_levels[n]);
+        for (var n=0; n<data.length; n++) {
+            out.push(data[n]);
         }
     }
 };
@@ -165,6 +174,68 @@ AudioUART.prototype.downSample = function(clk, sig) {
         this.prev_clk = clk[n];
 
     }
+    return output;
+};
+
+AudioUART.prototype.stateMachine = function(logic_levels) {
+    var output=[];
+
+    const STOP = 0;
+    const START = 1;
+    const DATA = 2;
+    const PARITY = 3;
+    const FE = 4;
+
+    for (var n=0; n<logic_levels.length; n++) {
+        var l=logic_levels[n];
+        switch(this.rx_state) {
+
+            case STOP:
+                if(l==0) this.rx_state = START;
+                break;
+
+            case START:
+                this.rx_cnt = 1;
+                this.rx_data = l;
+                this.rx_parity = l;
+                this.rx_state = DATA;
+                break;
+
+            case DATA:
+                if (l==1) {
+                    this.rx_data = this.rx_data | (1<<this.rx_cnt);
+                    this.rx_parity++;
+                }
+                this.rx_cnt++;
+                if (this.rx_cnt>=9) this.rx_state = PARITY;
+                break;
+
+            case PARITY:
+                out={data: this.rx_data & 0xff}; // Remove parity bit from data
+                out.pe = false;
+                out.fe = false;
+                if ((this.rx_parity & 1) == 1) {
+                    // Parity error
+                    out.pe=true;
+                 }
+                if (l==1) this.rx_state = STOP;
+                else {
+                    // Framing error
+                    this.rx_state = FE;
+                    out.fe = true;
+                }
+                output.push(out);
+                break;
+
+            case FE:
+                if (l==1) this.rx_state = STOP;
+                break;
+
+            default:
+                this.rx_state = FE;
+        }
+    } // Next logic level sample
+
     return output;
 };
 
