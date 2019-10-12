@@ -25,37 +25,19 @@
  *
  */
 
-var fs = require('fs');
-
-eval(''+fs.readFileSync('Biquad.js'));
-eval(''+fs.readFileSync('Differentiator.js'));
-eval(''+fs.readFileSync('Delay.js'));
-eval(''+fs.readFileSync('AudioUART.js'));
-
-var uartRx = new AudioUART();
-
-fs.readFile('sig_rx.vec','ascii', function(err, data) {
-    data=data.split("\n"); // Convert file to array of numbers
-    
-    var buffer_size=4096;
-    
-    // Chop up into Float32Array as WebAudio API would provide
-    for (var b=0; b<data.length+1-buffer_size; b+=buffer_size) {
-        var buf = new Float32Array(buffer_size);
-        for (var n=0; n<buffer_size; n++) {
-            buf[n]=data[b+n]/32767; // Convert 16-bit integers to Float32
-        }
-        uartRx.processRx(buf);
-    }
-    dumpSignal(uartRx.out, "sig_detect.vec")
-});
-
-dumpSignal = function(vec, filename) {
-    var str=""+vec;
-    str=str.split(',').join('\n');
-
-    fs.writeFile(filename, str, function (err) {
-    }); 
+var Delay = function(delay) {
+    this.delay_line=[];
+    this.index=0;
+    for (var n=0; n<delay; n++) this.delay_line[n]=0;
 };
 
+Delay.prototype.processSamples = function(input) {
+    var output=[];
+    for (var n=0; n<input.length; n++) {
+        output[n]=this.delay_line[this.index];
+        this.delay_line[this.index]=input[n];
+        this.index = (this.index + 1) % this.delay_line.length
+    }
+    return output; 
+};
 

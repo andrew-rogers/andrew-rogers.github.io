@@ -39,6 +39,14 @@ var AudioUART = function() {
     this.lpf = new Biquad(0.008443, 0.016885, 0.008443, -1.723776, 0.757547);
     this.edge_diff = new Differentiator();
     this.bpf = new Biquad(0.100000, 0.000000, -0.100000, -1.829281, 0.980100);
+    this.delay = new Delay(this.samples_per_bit);
+
+    // Clear the Rx data recovery state
+    this.prev_clk = 0;
+    this.prev_sig = 0;
+    this.data_diff1 = 0;
+    this.data_diff2 = 0;
+    this.logic_level = 1;
 };
 
 AudioUART.prototype.processTx = function(output) {
@@ -110,11 +118,53 @@ AudioUART.prototype.processBuffers = function() {
         for (var n=0; n<rxe.length; n++) rxe[n]=rxe[n]*rxe[n];
         rxe = this.bpf.processSamples(rxe);
 
-        // TODO: Replace with filtering and bit detection. For now just output the samples for analysis in GNU/Octave
+        // Delay the low-pass filtered signal to allow resonator to stabilise
+        rxf = this.delay.processSamples(rxf);
+
+        // Down-sample the signal and get the logic level signal
+        var logic_levels = this.downSample(rxe, rxf);
+
+        // TODO: Replace with UART Rx state machine. For now just output the logic level signal for analysis in GNU/Octave
         var out=this.out;
-        for (var n=0; n<rxe.length; n++) {
-            out.push(rxe[n]);
+        for (var n=0; n<logic_levels.length; n++) {
+            out.push(logic_levels[n]);
         }
     }
+};
+
+AudioUART.prototype.downSample = function(clk, sig) {
+    var output=[];
+    var threshold = 0.2;
+    var data_diff = 0;
+
+    for (var n=0; n<clk.length; n++) {
+
+        // Detect falling zero-crossing of clock
+        if (this.prev_clk >= 0 && clk[n] < 0) {
+
+            // Differentiate signal to detect data changes
+            data_diff = sig[n]-this.prev_sig;
+            this.prev_sig=sig[n];
+
+            // Centre of peaks have to be larger than a threshold and both side
+            // values must be below half the amplitude of the centre
+            var l = this.data_diff2;
+            var c = this.data_diff1;
+            var r = data_diff;
+            var c2= c/2;
+            if (c > threshold && c2 > l && c2 > r) this.logic_level = 1;
+            else if (c < -threshold && c2 < l && c2 < r) this.logic_level = 0;
+
+            // Update delay line
+            this.data_diff2 = this.data_diff1;
+            this.data_diff1 = data_diff;
+
+            output.push(this.logic_level);
+        }
+
+        this.prev_clk = clk[n];
+
+    }
+    return output;
 };
 
