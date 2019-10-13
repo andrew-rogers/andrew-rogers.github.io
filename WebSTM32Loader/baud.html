@@ -71,6 +71,7 @@ var getScripts = function(script_urls, loaded, err) {
 };
 
 var capture=[];
+var detected = false;
 
 var allLoaded = function() {
     var uart = new AudioUART(dataCallback);
@@ -85,7 +86,7 @@ var allLoaded = function() {
 
     var samplesCallback = function(ip, op) {
         uart.processTx(op);
-        uart.write([0x7f]); // TODO: Remove this when baud detection is properly implemented.
+        if (detected == false) uart.write([0x7f]); // TODO: Remove this when baud detection is properly implemented.
         uart.processRx(ip);
         capture=capture.concat(ip)
         if (capture.length >40) duplexAudio.stop(); // Stop after four seconds of capture
@@ -102,6 +103,11 @@ getScripts(["../AudioEffects/duplexaudio.js","Biquad.js","Differentiator.js","De
 
 
 var dataCallback = function(data_obj) {
+    var data = data_obj.data;
+    if (data == 0x1f || data == 0x79) {
+        detected = true;
+        log("STM32 Responded.");
+    }
     log(JSON.stringify(data_obj));
 };
 

@@ -29,6 +29,7 @@ var AudioUART = function(ondata) {
 
     this.ondata = ondata;
 
+    this.queue_tx = [];
     this.bit_queue_tx=[];
     this.sample_cnt=0;
     this.samples_per_bit=16;
@@ -58,10 +59,19 @@ var AudioUART = function(ondata) {
 };
 
 AudioUART.prototype.write = function(data) {
-    var bit_queue = this.bit_queue_tx;
+    var queue = this.queue_tx;
     for (var b=0; b<data.length; b++) {
+        queue.push(data[b]);
+    }
+};
+
+AudioUART.prototype.nextByte = function() {
+    var bit_queue = this.bit_queue_tx;
+    var queue = this.queue_tx;
+
+    if (queue.length > 0) {
         bit_queue.push(0); // Start bit
-        var byte = data[b];
+        var byte = queue[0];
         var parity = 0;
         for (var n=0; n<8; n++) {
             var bit = (byte>>n) & 1;
@@ -70,6 +80,9 @@ AudioUART.prototype.write = function(data) {
         }
         bit_queue.push(parity & 1); // Even parity bit
         bit_queue.push(1); // Stop bit
+
+        // Remove byte from queue
+        this.queue_tx=queue.slice(1);
     }
 };
 
@@ -89,7 +102,11 @@ AudioUART.prototype.processTx = function(output) {
 
             // Get the next bit from bit queue
             var bit = 1;
-            if(bit_cnt<bit_queue.length) bit = bit_queue[bit_cnt++]
+            if(bit_cnt<bit_queue.length) bit = bit_queue[bit_cnt++];
+            else {
+                this.nextByte();
+                if(bit_cnt<bit_queue.length) bit = bit_queue[bit_cnt++];
+            }
             sig_tx_val = bit * 2.0 - 1.0; // TODO: Manage inverted signal
             sample_cnt = samples_per_bit;
         }
