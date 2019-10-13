@@ -25,7 +25,10 @@
  *
  */
 
-var AudioUART = function() {
+var AudioUART = function(ondata) {
+
+    this.ondata = ondata;
+
     this.bit_queue=[];
     this.sample_cnt=0;
     this.samples_per_bit=16;
@@ -34,7 +37,6 @@ var AudioUART = function() {
     this.tail=this.samples_per_bit*11; // Number of samples to record after signal detect
     this.tail_cnt=0;
     this.buffers=[];
-    this.out=[];
 
     this.lpf = new Biquad(0.008443, 0.016885, 0.008443, -1.723776, 0.757547); // TODO: Manage inverted signal (use neg. b coeffs.)
     this.edge_diff = new Differentiator();
@@ -224,7 +226,7 @@ AudioUART.prototype.stateMachine = function(logic_levels) {
                     this.rx_state = FE;
                     out.fe = true;
                 }
-                output.push(out);
+                this.ondata(out); // Call the callback passed in the constructor
                 break;
 
             case FE:

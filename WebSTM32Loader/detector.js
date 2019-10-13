@@ -32,7 +32,11 @@ eval(''+fs.readFileSync('Differentiator.js'));
 eval(''+fs.readFileSync('Delay.js'));
 eval(''+fs.readFileSync('AudioUART.js'));
 
-var uartRx = new AudioUART();
+dumpData = function(data_obj) {
+    console.log(data_obj);
+};
+
+var uartRx = new AudioUART(dumpData);
 
 fs.readFile('sig_rx.vec','ascii', function(err, data) {
     data=data.split("\n"); // Convert file to array of numbers
@@ -47,8 +51,7 @@ fs.readFile('sig_rx.vec','ascii', function(err, data) {
         }
         uartRx.processRx(buf);
     }
-    console.log(uartRx.out);
-    //dumpSignal(uartRx.out, "sig_detect.vec")
+    //dumpSignal(uartRx.trace, "sig_detect.vec")
 });
 
 dumpSignal = function(vec, filename) {
