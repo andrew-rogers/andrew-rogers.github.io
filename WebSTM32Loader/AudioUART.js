@@ -29,10 +29,10 @@ var AudioUART = function(ondata) {
 
     this.ondata = ondata;
 
-    this.bit_queue=[];
+    this.bit_queue_tx=[];
     this.sample_cnt=0;
     this.samples_per_bit=16;
-    this.bit = 1;
+    this.sig_tx_val = 1;
 
     this.tail=this.samples_per_bit*11; // Number of samples to record after signal detect
     this.tail_cnt=0;
@@ -57,14 +57,30 @@ var AudioUART = function(ondata) {
     this.rx_parity = 0;
 };
 
+AudioUART.prototype.write = function(data) {
+    var bit_queue = this.bit_queue_tx;
+    for (var b=0; b<data.length; b++) {
+        bit_queue.push(0); // Start bit
+        var byte = data[b];
+        var parity = 0;
+        for (var n=0; n<8; n++) {
+            var bit = (byte>>n) & 1;
+            parity = parity + bit;
+            bit_queue.push(bit); // Data bits
+        }
+        bit_queue.push(parity & 1); // Even parity bit
+        bit_queue.push(1); // Stop bit
+    }
+};
+
 AudioUART.prototype.processTx = function(output) {
 
     var sample_cnt = this.sample_cnt;
     var samples_per_bit = this.samples_per_bit
-    var bit_queue = this.bit_queue;
+    var bit_queue = this.bit_queue_tx;
 
     var bit_cnt = 0;
-    var bit = this.bit;
+    var sig_tx_val = this.sig_tx_val;
 
     // The sample loop
     for (var n = 0; n < output.length; n++) {
@@ -72,23 +88,21 @@ AudioUART.prototype.processTx = function(output) {
         if(sample_cnt==0) {
 
             // Get the next bit from bit queue
+            var bit = 1;
             if(bit_cnt<bit_queue.length) bit = bit_queue[bit_cnt++]
-            else bit = 1; // If no bits in queue idle high
+            sig_tx_val = bit * 2.0 - 1.0; // TODO: Manage inverted signal
             sample_cnt = samples_per_bit;
         }
         sample_cnt--;
 
-        output[n] = bit * 2.0 - 1.0;
+        output[n] = sig_tx_val;
     }
 
-    this.bit = bit; // Save the current bit in case it has only been partly synthesised
+    this.sig_tx_val = sig_tx_val; // Save the current bit in case it has only been partly synthesised
 
     this.sample_cnt = sample_cnt;
 
-    this.bit_queue = bit_queue.slice(bit_cnt); // Remove the bits that have been converted from the queue
-
-    // For now just fill buffer with 0x7F with long idle for Baud Acquisition test. Replace with callback API.
-    if(this.bit_queue.length==0)this.bit_queue=[ 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,];
+    this.bit_queue_tx = bit_queue.slice(bit_cnt); // Remove the bits that have been converted from the queue
 };
 
 AudioUART.prototype.processRx = function(input) {

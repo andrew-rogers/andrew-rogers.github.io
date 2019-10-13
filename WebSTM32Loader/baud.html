@@ -85,6 +85,7 @@ var allLoaded = function() {
 
     var samplesCallback = function(ip, op) {
         uart.processTx(op);
+        uart.write([0x7f]); // TODO: Remove this when baud detection is properly implemented.
         uart.processRx(ip);
         capture=capture.concat(ip)
         if (capture.length >40) duplexAudio.stop(); // Stop after four seconds of capture
