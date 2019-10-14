@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width">
+        <title>STM32 USART Baud Acquisition</title>
+    </head>
+
+    <body>
+        <textarea id="ta_cmd" rows="2" cols="25">7F</textarea>
+        <button id="button_send">Send</button>
+        <button id="button_clear">Clear log</button>
+        <div id="div_download"></div>
+        <textarea id="ta_log" rows="10" cols="45"></textarea>
+        <script>
+
+/**
+ *
+ * @licstart  The following is the entire license notice for the 
+ *  JavaScript code in this page.
+ *
+ * Copyright (C) 2019  Andrew Rogers
+ *
+ *
+ * The JavaScript code in this page is free software: you can
+ * redistribute it and/or modify it under the terms of the GNU
+ * General Public License (GNU GPL) as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option)
+ * any later version.  The code is distributed WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+ *
+ * As additional permission under GNU GPL version 3 section 7, you
+ * may distribute non-source (e.g., minimized or compacted) forms of
+ * that code without the copy of the GNU GPL normally required by
+ * section 4, provided you include this license notice and a URL
+ * through which recipients can access the Corresponding Source.
+ *
+ * @licend  The above is the entire license notice
+ * for the JavaScript code in this page.
+ *
+ */
+
+
+
+var button_gb = document.getElementById('button_gb');
+var ta_log = document.getElementById('ta_log');
+
+ta_log.value="";
+
+var log = function(str) {
+    ta_log.value = ta_log.value + str + "\n";
+};
+
+var getScripts = function(script_urls, loaded, err) {
+    var num_loaded=0;
+    for (var n=0; n<script_urls.length; n++) {
+        var script_url = script_urls[n];
+        var elem_script = document.createElement('script');
+        elem_script.setAttribute('type', 'text/javascript');
+        elem_script.setAttribute('src', script_url);
+        elem_script.myid = n;
+        elem_script.myurl = script_url;
+        elem_script.onload = function(e) {
+            num_loaded++;
+            if (num_loaded == script_urls.length) loaded();
+        };
+        elem_script.onerror = function(e) {
+            err(e);
+        };
+        document.getElementsByTagName('head')[0].appendChild(elem_script);
+    }
+};
+
+var capture=[];
+var detected = false;
+
+var allLoaded = function() {
+    var uart = new AudioUART(dataCallback);
+
+    // --- DuplexAudio setup --------------
+
+    var init = function(media) {
+        ta_log.value = ta_log.value + document.scripts[0].text;
+        duplexAudio.start();
+    };
+
+
+    var samplesCallback = function(ip, op) {
+        uart.processTx(op);
+        uart.processRx(ip);
+    };
+
+    var buffer_size = 4096;
+
+    var duplexAudio = new DuplexAudio(buffer_size, init, samplesCallback);
+
+    // ------------------------------------
+
+    // Send button click handler
+    button_send.onclick = function() {
+        var bytes = hex2bytes(ta_cmd.value);
+        uart.write(bytes);
+    }
+
+    // Clear log button click handler
+    button_clear.onclick = function() {
+        ta_log.value = "";
+    }
+};
+
+getScripts(["../AudioEffects/duplexaudio.js","Biquad.js","Differentiator.js","Delay.js","AudioUART.js"], allLoaded, function(e){log("Failed to load '" + e.target.myurl + "'");});
+
+var dataCallback = function(data_obj) {
+    var data = data_obj.data;
+    if (data == 0x1f || data == 0x79) {
+        detected = true;
+        log("STM32 Responded.");
+    }
+    log(JSON.stringify(data_obj));
+};
+
+function hex2bytes(hex) { 
+    var bytes = [];
+    for (var n=0; n<hex.length; n+=2) {
+        var byte = parseInt(hex.substring(n, n+2), 16);
+        bytes.push(byte);
+    }
+    return bytes;
+}
+
+        </script>
+    </body>
+</html>
+
