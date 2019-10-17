@@ -25,9 +25,9 @@
  *
  */
 
-var AudioUART = function(ondata) {
+var AudioUART = function() {
 
-    this.ondata = ondata;
+    this.ondata = null;
 
     this.queue_tx = [];
     this.bit_queue_tx=[];
@@ -56,6 +56,11 @@ var AudioUART = function(ondata) {
     this.rx_cnt = 0;
     this.rx_data = 0;
     this.rx_parity = 0;
+};
+
+AudioUART.prototype.on = function(event_name, callback) {
+    if (event_name == "data") this.ondata = callback;
+    else if (event_name == "error") this.onerror = callback;
 };
 
 AudioUART.prototype.write = function(data) {
@@ -166,11 +171,6 @@ AudioUART.prototype.processBuffers = function() {
         // UART state machine
         var data = this.stateMachine(logic_levels);
 
-        // Concatenate UART Rx objects into output array
-        var out=this.out;
-        for (var n=0; n<data.length; n++) {
-            out.push(data[n]);
-        }
     }
 };
 
@@ -211,8 +211,6 @@ AudioUART.prototype.downSample = function(clk, sig) {
 };
 
 AudioUART.prototype.stateMachine = function(logic_levels) {
-    var output=[];
-
     const STOP = 0;
     const START = 1;
     const DATA = 2;
@@ -257,7 +255,8 @@ AudioUART.prototype.stateMachine = function(logic_levels) {
                     this.rx_state = FE;
                     out.fe = true;
                 }
-                this.ondata(out); // Call the callback passed in the constructor
+                if(this.ondata) this.ondata(out.data); // Call the callback passed in the constructor
+                // TODO: Handle the errors
                 break;
 
             case FE:
@@ -268,7 +267,5 @@ AudioUART.prototype.stateMachine = function(logic_levels) {
                 this.rx_state = FE;
         }
     } // Next logic level sample
-
-    return output;
 };
 

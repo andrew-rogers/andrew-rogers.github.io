@@ -74,7 +74,7 @@ var capture=[];
 var detected = false;
 
 var allLoaded = function() {
-    var uart = new AudioUART(dataCallback);
+    var uart = new AudioUART();
 
     // --- DuplexAudio setup --------------
 
@@ -97,18 +97,19 @@ var allLoaded = function() {
     var duplexAudio = new DuplexAudio(buffer_size, init, samplesCallback);
 
     // ------------------------------------
+
+    uart.on('data',dataCallback);
 };
 
 getScripts(["../AudioEffects/duplexaudio.js","Biquad.js","Differentiator.js","Delay.js","AudioUART.js"], allLoaded, function(e){log("Failed to load '" + e.target.myurl + "'");});
 
 
-var dataCallback = function(data_obj) {
-    var data = data_obj.data;
+var dataCallback = function(data) {
     if (data == 0x1f || data == 0x79) {
         detected = true;
         log("STM32 Responded.");
     }
-    log(JSON.stringify(data_obj));
+    log("Rx> 0x" + ("0"+data.toString(16)).slice(-2));
 };
 
 
