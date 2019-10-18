@@ -43,7 +43,7 @@ UartRx = function() {
     this.events.F1 = 2; // Framing event 1
     this.events.D = 3; // Data bit
 
-    this.sm = new StateMachine();
+    this.sm = new StateMachine(this.events);
 
     // Setup the state transitions
     var e = this.events;
@@ -53,7 +53,7 @@ UartRx = function() {
     this.sm.addTransition("DATA",e.D,"DATA", function(e,b) {that.dataBit(b);});
 
     this.sm.addTransition("DATA",e.F0,"STOP", function() {that.parityBit(0);});
-    this.sm.addTransition("DATA",e.F1,"STOP", function() {that.parityBit(1);});
+    this.sm.addTransition("DATA --> STOP : F1", function() {that.parityBit(1);});
 
     this.sm.addTransition("STOP",e.F0,"STOP", function() {that.stopBit(0);});
     this.sm.addTransition("STOP",e.F1,"IDLE", function() {that.stopBit(1);});

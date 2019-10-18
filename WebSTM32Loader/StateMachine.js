@@ -25,14 +25,26 @@
  *
  */
 
-StateMachine = function() {
+StateMachine = function(events) {
     this.states = {};
     this.c_state = null;
+    this.events = events;
 };
 
-StateMachine.prototype.addTransition = function(st_src, e, st_dst, callback) {
+StateMachine.prototype.addTransition = function() {
+    if (arguments.length==4) this.addTransition4.apply(this, arguments);
+    else {
+        // Parse PlantUML-like notation
+        args = arguments[0].match(/(.*)-->(.*):(.*)/);
+        this.addTransition4(args[1].trim(), args[3].trim(), args[2].trim(), arguments[1]);
+    }
+};
+
+StateMachine.prototype.addTransition4 = function(st_src, e, st_dst, callback) {
     var state = this.states[st_src] || this.newState(st_src);
     var next_state = this.states[st_dst] || this.newState(st_dst);
+
+    if (this.events && typeof e === 'string') e = this.events[e];
 
     state.on(e, next_state, callback);
 
