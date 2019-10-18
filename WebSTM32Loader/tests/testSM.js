@@ -47,8 +47,7 @@ UartRx = function() {
     this.events = {};
     this.events.F0 = 1; // Framing event 0 
     this.events.F1 = 2; // Framing event 1
-    this.events.D0 = 3; // Data bit 0
-    this.events.D1 = 4; // Data bit 1
+    this.events.D = 3; // Data bit
 
     this.sm = new StateMachine([this.states.IDLE, this.states.DATA, this.states.STOP]);
 
@@ -59,8 +58,7 @@ UartRx = function() {
     
     s.IDLE.on(e.F0, s.DATA, function() {that.startBit();});
 
-    s.DATA.on(e.D0, s.DATA, function() {that.dataBit(0);});
-    s.DATA.on(e.D1, s.DATA, function() {that.dataBit(1);});
+    s.DATA.on(e.D, s.DATA, function(e,b) {that.dataBit(b);});
     s.DATA.on(e.F0, s.STOP, function() {that.parityBit(0);});
     s.DATA.on(e.F1, s.STOP, function() {that.parityBit(1);});
 
@@ -89,15 +87,13 @@ UartRx.prototype.stopBit = function(s) {
 UartRx.prototype.bit = function(b) {
 
     // Default to framing bit
-    var e = this.events.F0;
+    var e = this.events.F0 + b;
 
     // If data is needed then raise data events
-    if (this.data_cnt < this.num_data_bits) e = this.events.D0;
+    if (this.data_cnt < this.num_data_bits) e = this.events.D;
  
-    // Combine data bit with event type and pass to SM
-    e = e + b;
     console.log("> " + b + " event="+e);
-    this.sm.event(e);
+    this.sm.event(e,b);
 }
 
 uart_rx = new UartRx();

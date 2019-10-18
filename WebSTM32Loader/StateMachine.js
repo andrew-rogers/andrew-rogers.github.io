@@ -50,7 +50,7 @@ StateMachine.prototype.addState = function(state) {
     state.event = function(e) {
         var handler = state.handlers[e];
         if(handler) {
-            if(handler.callback) handler.callback();
+            if(handler.callback) handler.callback.apply(this, arguments);
             return handler.next_state;
         }
         else return state;      
@@ -59,7 +59,7 @@ StateMachine.prototype.addState = function(state) {
     this.states.push(state);
 };
 
-StateMachine.prototype.event = function(e) {
-    this.c_state = this.c_state.event(e);
+StateMachine.prototype.event = function() {
+    this.c_state = this.c_state.event.apply(this, arguments);
 };
 
