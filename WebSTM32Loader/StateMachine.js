@@ -25,21 +25,24 @@
  *
  */
 
-StateMachine = function(states) {
-    this.states = [];
+StateMachine = function() {
+    this.states = {};
     this.c_state = null;
-
-    // Add all the states and assume the first state is the initial state.
-    if (states.length > 0) {
-        for (var n=0; n<states.length; n++) this.addState(states[n]);
-        this.c_state = states[0];
-    }
 };
 
-StateMachine.prototype.addState = function(state) {
-    state.sm = this;
-    state.id = this.states.length;
-    state.handlers = [];
+StateMachine.prototype.addTransition = function(st_src, e, st_dst, callback) {
+    var state = this.states[st_src] || this.newState(st_src);
+    var next_state = this.states[st_dst] || this.newState(st_dst);
+
+    state.on(e, next_state, callback);
+
+    // Assume source state of first transition is the initial state
+    if(this.c_state==null)this.c_state=state;
+};
+
+StateMachine.prototype.newState = function(name) {
+    var state = {sm: this, handlers: []};
+    this.states[name]=state;
 
     // Give the state an event registration method
     state.on = function(e, next_state, callback) {
@@ -55,8 +58,8 @@ StateMachine.prototype.addState = function(state) {
         }
         else return state;      
     };
-    
-    this.states.push(state);
+
+    return state;
 };
 
 StateMachine.prototype.event = function() {

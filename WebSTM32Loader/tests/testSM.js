@@ -37,33 +37,27 @@ UartRx = function() {
     this.num_data_bits = 8;
     this.data_cnt = this.num_data_bits;
 
-    // Define the states
-    this.states = {};
-    this.states.IDLE = {}; // Line is idle, waiting for start bit
-    this.states.DATA = {}; // Got a start bit and waiting for data bits
-    this.states.STOP = {}; // Waiting for stop bit
-
     // Define events
     this.events = {};
     this.events.F0 = 1; // Framing event 0 
     this.events.F1 = 2; // Framing event 1
     this.events.D = 3; // Data bit
 
-    this.sm = new StateMachine([this.states.IDLE, this.states.DATA, this.states.STOP]);
+    this.sm = new StateMachine();
 
     // Setup the state transitions
-    var s = this.states;
     var e = this.events;
     var that = this;
-    
-    s.IDLE.on(e.F0, s.DATA, function() {that.startBit();});
 
-    s.DATA.on(e.D, s.DATA, function(e,b) {that.dataBit(b);});
-    s.DATA.on(e.F0, s.STOP, function() {that.parityBit(0);});
-    s.DATA.on(e.F1, s.STOP, function() {that.parityBit(1);});
+    this.sm.addTransition("IDLE",e.F0,"DATA", function() {that.startBit();});
+    this.sm.addTransition("DATA",e.D,"DATA", function(e,b) {that.dataBit(b);});
 
-    s.STOP.on(e.F0, s.STOP, function() {that.stopBit(0);});
-    s.STOP.on(e.F1, s.IDLE, function() {that.stopBit(1);});
+    this.sm.addTransition("DATA",e.F0,"STOP", function() {that.parityBit(0);});
+    this.sm.addTransition("DATA",e.F1,"STOP", function() {that.parityBit(1);});
+
+    this.sm.addTransition("STOP",e.F0,"STOP", function() {that.stopBit(0);});
+    this.sm.addTransition("STOP",e.F1,"IDLE", function() {that.stopBit(1);});
+
 };
 
 UartRx.prototype.startBit = function() {
