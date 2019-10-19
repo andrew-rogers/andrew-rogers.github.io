@@ -124,33 +124,50 @@ Bootloader.prototype.detectBaud = function(num_retries, callback) {
 
     var timeout = function() {
         that.serial.write([0x7f]);
-        that.readSerial(1, 1000, cb)
+        that.ack(1000, cb);
+        callback('.');
     };
 
-    var cb = function(rx) {
-
-        // Iterate through received bytes looking for ACK or NACK
-        for (var n=0; n<rx.length && result==null; n++) {
-            if (rx[n]==0x1f) result='N';
-            else if (rx[n]==0x79) result='A';
-        }
+    var cb = function(result) {
 
         // If timeout or some other values then retry
-        if (result==null) {
-            if (cnt++ >= num_retries) result='T';
-            else {
-                sm.event(events.T);
-            }
+        if (result=='T') {
+            if (cnt++ < num_retries) sm.event(events.T);
         }
         else if (callback) callback(result);
     };
 
     this.serial.write([0x7f]);
-    this.readSerial(1, 1000, cb);
+    this.ack(1000, cb);
 };
 
-Bootloader.prototype.sendCommand = function(timeout) {
-    // Send command byte
-    // Send cmd^0xff
-    // Wait ACK/NACK
+Bootloader.prototype.sendCommand = function(cmd, timeout, callback) {
+
+    // Clear the read buffer.
+    this.read_buffer = [];
+
+    // Send command byte and its 1's compliment.
+    this.serial.write([cmd, cmd^0xff]);
+
+    this.ack(timeout, callback);
+};
+
+Bootloader.prototype.ack = function(timeout, callback) {
+
+    // Callback for readSerial.
+    var cb = function(rx) {
+
+        var result = 'T';
+
+        // Iterate through received bytes looking for ACK or NACK
+        for (var n=0; n<rx.length; n++) {
+            if (rx[n]==0x1f) result='N';
+            else if (rx[n]==0x79) result='A';
+        }
+
+        if (callback) callback(result);
+    }
+
+    // Read just one byte.
+    this.readSerial(1, timeout, cb);
 };

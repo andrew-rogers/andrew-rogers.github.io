@@ -7,7 +7,7 @@
     </head>
 
     <body>
-        <div><button id="button_baud">Baud</button></div>
+        <div><button id="button_baud">Baud</button><button id="button_get">Get</button></div>
         <textarea id="ta_cmd" rows="2" cols="25">7F</textarea>
         <button id="button_send">Send</button>
         <button id="button_clear">Clear log</button>
@@ -106,7 +106,12 @@ var allLoaded = function() {
 
     // Baud button click handler
     button_baud.onclick = function() {
-        bootloader.detectBaud(10,function(result) {log("Baud> " + result);});
+        bootloader.detectBaud(100,function(result) {ta_log.value += result;});
+    }
+
+    // Get button click handler
+    button_get.onclick = function() {
+        bootloader.sendCommand(0, 2000, function(result) {log("GET> " + result);});
     }
 
     // Send button click handler
