@@ -29,6 +29,8 @@ StateMachine = function(events) {
     this.states = {};
     this.c_state = null;
     this.events = events;
+    this.event_queue = [];
+    this.loop_running = false;
 };
 
 StateMachine.prototype.addTransition = function() {
@@ -75,6 +77,19 @@ StateMachine.prototype.newState = function(name) {
 };
 
 StateMachine.prototype.event = function() {
-    this.c_state = this.c_state.event.apply(this, arguments);
+    this.event_queue.push(arguments)
+    this.eventLoop();
+};
+
+StateMachine.prototype.eventLoop = function() {
+
+    // Ensure this only runs once and that the event loop doesn't get nested by events created by events
+    if (this.loop_running == false) {
+        this.loop_running = true;
+        while (this.event_queue.length > 0) {
+            this.c_state = this.c_state.event.apply(this, this.event_queue.shift());
+        }
+        this.loop_running = false;
+    }
 };
 

@@ -255,7 +255,7 @@ AudioUART.prototype.stateMachine = function(logic_levels) {
                     this.rx_state = FE;
                     out.fe = true;
                 }
-                if(this.ondata) this.ondata(out.data); // Call the callback passed in the constructor
+                if(this.ondata) this.ondata([out.data]); // Call the callback passed in the constructor
                 // TODO: Handle the errors
                 break;
 

@@ -7,6 +7,7 @@
     </head>
 
     <body>
+        <div><button id="button_baud">Baud</button></div>
         <textarea id="ta_cmd" rows="2" cols="25">7F</textarea>
         <button id="button_send">Send</button>
         <button id="button_clear">Clear log</button>
@@ -77,7 +78,13 @@ var detected = false;
 
 var allLoaded = function() {
 
+    var buffer_size = 4096;
+    var fs = 44100;
+    var tick_rate = fs/buffer_size;
+
     var uart = new AudioUART();
+    var timer = new TickTimer(tick_rate);
+    var bootloader = new Bootloader(timer, uart);
 
     // --- DuplexAudio setup --------------
 
@@ -90,13 +97,17 @@ var allLoaded = function() {
     var samplesCallback = function(ip, op) {
         uart.processTx(op);
         uart.processRx(ip);
+        timer.tick();
     };
-
-    var buffer_size = 4096;
 
     var duplexAudio = new DuplexAudio(buffer_size, init, samplesCallback);
 
     // ------------------------------------
+
+    // Baud button click handler
+    button_baud.onclick = function() {
+        bootloader.detectBaud(10,function(result) {log("Baud> " + result);});
+    }
 
     // Send button click handler
     button_send.onclick = function() {
@@ -109,17 +120,18 @@ var allLoaded = function() {
         ta_log.value = "";
     }
 
-    uart.on('data',dataCallback);
 };
 
-getScripts(["../AudioEffects/duplexaudio.js","Biquad.js","Differentiator.js","Delay.js","AudioUART.js"], allLoaded, function(e){log("Failed to load '" + e.target.myurl + "'");});
+getScripts(["../AudioEffects/duplexaudio.js","Biquad.js","Differentiator.js","Delay.js","AudioUART.js","Bootloader.js","StateMachine.js", "TickTimer.js"], allLoaded, function(e){log("Failed to load '" + e.target.myurl + "'");});
 
-var dataCallback = function(data) {
-    if (data == 0x1f || data == 0x79) {
-        detected = true;
-        log("STM32 Responded.");
+var logRx = function(data) {
+    for (var n=0; n<data.length; n++) {
+        if (data == 0x1f || data == 0x79) {
+            detected = true;
+            log("STM32 Responded.");
+        }
+        log("Rx> 0x" + ("0"+data.toString(16)).slice(-2));
     }
-    log("Rx> 0x" + ("0"+data.toString(16)).slice(-2));
 };
 
 function hex2bytes(hex) { 
@@ -130,7 +142,6 @@ function hex2bytes(hex) {
     }
     return bytes;
 }
-
         </script>
     </body>
 </html>
