@@ -106,7 +106,10 @@ var allLoaded = function() {
 
     // Baud button click handler
     button_baud.onclick = function() {
-        bootloader.detectBaud(100,function(result) {ta_log.value += result;});
+        bootloader.detectBaud(100,function(result) {
+            if (ta_log.value.length>20) ta_log.value="";
+            ta_log.value += result;
+        });
     }
 
     // Get button click handler
@@ -127,7 +130,18 @@ var allLoaded = function() {
 
 };
 
-getScripts(["../AudioEffects/duplexaudio.js","Biquad.js","Differentiator.js","Delay.js","AudioUART.js","Bootloader.js","StateMachine.js", "TickTimer.js"], allLoaded, function(e){log("Failed to load '" + e.target.myurl + "'");});
+scripts=[
+    "../AudioEffects/duplexaudio.js",
+    "Biquad.js",
+    "Differentiator.js",
+    "Delay.js",
+    "AudioUART.js",
+    "Bootloader.js",
+    "StateMachine.js",
+    "TickTimer.js",
+    "SerialWithTimeout.js"
+];
+getScripts(scripts, allLoaded, function(e){log("Failed to load '" + e.target.myurl + "'");});
 
 var logRx = function(data) {
     for (var n=0; n<data.length; n++) {
