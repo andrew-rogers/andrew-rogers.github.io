@@ -42,7 +42,7 @@ Bootloader.prototype.detectBaud = function(num_retries, callback) {
 
     var timeout = function() {
         that.serial.write([0x7f]);
-        that.ack(1000, cb);
+        that.ack(1000).then(cb,function(err){cb(err.message);});
         callback('.');
     };
 
@@ -56,10 +56,17 @@ Bootloader.prototype.detectBaud = function(num_retries, callback) {
     };
 
     this.serial.write([0x7f]);
-    this.ack(1000, cb);
+    this.ack(1000).then(cb,function(err){cb(err.message);});
 };
 
-Bootloader.prototype.sendCommand = function(cmd, timeout, callback) {
+Bootloader.prototype.readMemory = function(address, num_bytes) {
+    return sendCommand(0x11, 1000)
+    .then(function() {sendAddress(address);})
+    .then(function() {sendNumBytes(num_bytes);})
+    .then(function() {getData(num_bytes);})
+};
+
+Bootloader.prototype.sendCommand = function(cmd, timeout) {
 
     // Clear the read buffer.
     this.serial.readNC(1000);
@@ -67,26 +74,32 @@ Bootloader.prototype.sendCommand = function(cmd, timeout, callback) {
     // Send command byte and its 1's compliment.
     this.serial.write([cmd, cmd^0xff]);
 
-    this.ack(timeout, callback);
+    // Return the ACK/NACK promise
+    return this.ack(timeout);
 };
 
-Bootloader.prototype.ack = function(timeout, callback) {
+Bootloader.prototype.ack = function(timeout) {
 
-    // Callback for readSerial.
-    var cb = function(rx) {
+    var that = this;
+    return new Promise(function(resolve, reject) {
 
-        var result = 'T';
+        // Callback for readSerial.
+        var cb = function(rx) {
 
-        // Iterate through received bytes looking for ACK or NACK
-        for (var n=0; n<rx.length; n++) {
-            if (rx[n]==0x1f) result='N';
-            else if (rx[n]==0x79) result='A';
+            var result = 'T';
+
+            // Iterate through received bytes looking for ACK or NACK
+            for (var n=0; n<rx.length; n++) {
+                if (rx[n]==0x1f) result='N';
+                else if (rx[n]==0x79) result='A';
+            }
+
+            if (result=='A') resolve(result);
+            else reject(new Error(result));
         }
 
-        if (callback) callback(result);
-    }
-
-    // Read just one byte.
-    this.serial.read(1, timeout, cb);
+        // Read just one byte.
+        that.serial.read(1, timeout, cb);
+    });
 };
 

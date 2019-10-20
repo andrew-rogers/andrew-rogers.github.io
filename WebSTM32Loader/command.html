@@ -114,7 +114,7 @@ var allLoaded = function() {
 
     // Get button click handler
     button_get.onclick = function() {
-        bootloader.sendCommand(0, 2000, function(result) {log("GET> " + result);});
+        bootloader.sendCommand(0, 2000).then(function(result) {log("GET> " + result);});
     }
 
     // Send button click handler
