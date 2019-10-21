@@ -114,7 +114,14 @@ var allLoaded = function() {
 
     // Get button click handler
     button_get.onclick = function() {
-        bootloader.sendCommand(0, 2000).then(function(result) {log("GET> " + result);});
+        //bootloader.cmdGet().then(function(result) {log("GET> " + result);});
+
+        var RAM_ADDR = 0x20001000 >>> 0; // Address as unsigned 32-bit
+        bootloader.cmdReadMemory(RAM_ADDR,16).then(function(result) {
+            log("RMEM> " + result);
+        }).catch(function(err) {
+            log(err);
+        });
     }
 
     // Send button click handler
@@ -145,11 +152,11 @@ getScripts(scripts, allLoaded, function(e){log("Failed to load '" + e.target.myu
 
 var logRx = function(data) {
     for (var n=0; n<data.length; n++) {
-        if (data == 0x1f || data == 0x79) {
+        if (data[n] == 0x1f || data[n] == 0x79) {
             detected = true;
             log("STM32 Responded.");
         }
-        log("Rx> 0x" + ("0"+data.toString(16)).slice(-2));
+        log("Rx> 0x" + ("0"+data[n].toString(16)).slice(-2));
     }
 };
 

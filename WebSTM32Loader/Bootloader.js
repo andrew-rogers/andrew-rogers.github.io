@@ -59,11 +59,27 @@ Bootloader.prototype.detectBaud = function(num_retries, callback) {
     this.ack(1000).then(cb,function(err){cb(err.message);});
 };
 
-Bootloader.prototype.readMemory = function(address, num_bytes) {
-    return sendCommand(0x11, 1000)
-    .then(function() {sendAddress(address);})
-    .then(function() {sendNumBytes(num_bytes);})
-    .then(function() {getData(num_bytes);})
+Bootloader.prototype.cmdGet = function() {
+    var that = this;
+    return this.sendCommand(0x00, 1000).then(function() {
+        return that.getNumBytes();
+    }).then(function(num_bytes) {
+        return that.getData(num_bytes);
+    }).then(function(cmds) {
+        // TODO: Store the supported command list somewhere
+        return that.ack(1000);
+    });
+};
+
+Bootloader.prototype.cmdReadMemory = function(address, num_bytes) {
+    var that = this;
+    return this.sendCommand(0x11, 1000).then(function() {
+        return that.sendAddress(address);
+    }).then(function() {
+        return that.sendNumBytes(num_bytes-1);
+    }).then(function() {
+        return that.getData(num_bytes);
+    });
 };
 
 Bootloader.prototype.sendCommand = function(cmd, timeout) {
@@ -78,12 +94,77 @@ Bootloader.prototype.sendCommand = function(cmd, timeout) {
     return this.ack(timeout);
 };
 
+Bootloader.prototype.getNumBytes = function() {
+
+    var that = this;
+    return new Promise(function(resolve, reject) {
+
+        // Callback for serial read.
+        var cb = function(rx) {
+            if (rx.length > 0) resolve(rx[0]);
+            else reject(new Error('T'));
+        }
+
+        // Read just one byte.
+        that.serial.read(1, 1000, cb);
+    });
+};
+
+Bootloader.prototype.getData = function(num_bytes) {
+
+    var that = this;
+    return new Promise(function(resolve, reject) {
+
+        // Callback for serial read.
+        var cb = function(rx) {
+            if (rx.length >= num_bytes) resolve(rx);
+            else {
+                err = new Error('Could not get all data requested.');
+                err.rx = rx;
+                reject(err);
+            }
+        }
+
+        // Read the bytes.
+        that.serial.read(num_bytes, 1000, cb);
+    });
+};
+
+Bootloader.prototype.sendAddress = function(address) {
+
+    // Clear the read buffer.
+    this.serial.readNC(1000);
+
+    // Send address bytes and checksum.
+    var bytes=[(address >>> 24) & 0xff];
+    bytes.push((address >>> 16) & 0xff);
+    bytes.push((address >>> 8) & 0xff);
+    bytes.push((address >>> 0) & 0xff);
+    bytes.push(bytes[0]^bytes[1]^bytes[2]^bytes[3])
+    this.serial.write(bytes);
+
+    // Return the ACK/NACK promise
+    return this.ack(1000);
+};
+
+Bootloader.prototype.sendNumBytes = function(num_bytes) {
+
+    // Clear the read buffer.
+    this.serial.readNC(1000);
+
+    // Send command byte and its 1's compliment.
+    this.serial.write([num_bytes, num_bytes^0xff]);
+
+    // Return the ACK/NACK promise
+    return this.ack(1000);
+};
+
 Bootloader.prototype.ack = function(timeout) {
 
     var that = this;
     return new Promise(function(resolve, reject) {
 
-        // Callback for readSerial.
+        // Callback for serial read.
         var cb = function(rx) {
 
             var result = 'T';
