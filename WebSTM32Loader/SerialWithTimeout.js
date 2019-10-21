@@ -31,25 +31,20 @@ var SerialWithTimeout = function(timer, serial) {
     this.read_buffer = [];
     this.read_timer = null;
 
-    this.events = {};
-    this.events.READ    = 0; // Request data from serial
-    this.events.RX      = 1; // Got byte(s) from serial
-    this.events.RX_LAST = 2; // Got the last byte(s) of the request from serial
-    this.events.TIMEOUT = 3; // The timer elapsed
-
     var that = this;
-
-    this.sm_serial = new StateMachine(this.events);
-    this.sm_serial.addTransition("IDLE    --> RX_WAIT : READ   ", function(e, num_bytes, timeout, callback) {that.initRead(num_bytes, timeout, callback);});
-    this.sm_serial.addTransition("RX_WAIT --> RX_WAIT : RX     ", function(e, data) {that.gotData(data);});
-    this.sm_serial.addTransition("RX_WAIT --> IDLE    : RX_LAST", function(e, data) {that.lastData(data);});
-    this.sm_serial.addTransition("RX_WAIT --> IDLE    : TIMEOUT", function() {that.timeoutElapsed();});
-    
     serial.on('data',function(data) {that.rxCallback(data);})
 };
 
 SerialWithTimeout.prototype.read = function(num_bytes, timeout, callback) {
-    this.sm_serial.event(this.events.READ, num_bytes, timeout, callback);
+
+    // Store the callback and requested number of bytes in case of timeout
+    this.read_requested = num_bytes;
+    this.cb_readSerial = callback;
+
+    // Start the timer
+    var that = this;
+    if (this.read_timer == null) this.read_timer = this.timer.oneShot(timeout, function() {that.timerCallback();});
+    else this.read_timer.restart(timeout);
 };
 
 // Return up to num_bytes data pulled from the receive buffer.
@@ -68,54 +63,32 @@ SerialWithTimeout.prototype.write = function(data) {
 
 SerialWithTimeout.prototype.rxCallback = function(data) {
 
-    var e = this.events.RX;
-
     logRx(data);
 
-    // Check if there are enough bytes to satisfy request
-    if (this.read_buffer.length + data.length >= this.read_requested) e = this.events.RX_LAST;
+    // Put each byte of data in read buffer
+    for (var n=0; n<data.length; n++) this.read_buffer.push(data[n]);
 
-    this.sm_serial.event(e, data);
+    if (this.read_requested > 0) {
+
+        // Restart the timer
+        this.read_timer.restart()
+
+        // Check if there are enough bytes to satisfy request
+        if (this.read_buffer.length >= this.read_requested) {
+            this.cb_readSerial(this.readNC(this.read_requested));
+            this.read_requested = 0;
+        }
+
+    }
 };
 
 SerialWithTimeout.prototype.timerCallback = function() {
 
-    this.sm_serial.event(this.events.TIMEOUT);
-};
+    if (this.read_requested > 0) {
 
-SerialWithTimeout.prototype.gotData = function(data) {
-
-    // Restart the timer
-    this.read_timer.restart()
-
-    // Put each byte of data in read buffer
-    for (var n=0; n<data.length; n++) this.read_buffer.push(data[n]);
-};
-
-SerialWithTimeout.prototype.lastData = function(data) {
-
-    // Put each byte of data in read buffer
-    for (var n=0; n<data.length; n++) this.read_buffer.push(data[n]);
-
-    this.cb_readSerial(this.readNC(this.read_requested));
-};
-
-SerialWithTimeout.prototype.timeoutElapsed = function() {
-
-    // Timer elapsed therefore get any bytes that have been acquired so far
-    this.cb_readSerial(this.readNC(this.read_requested));
-};
-
-
-SerialWithTimeout.prototype.initRead = function(num_bytes, timeout, callback) {
-
-    // Store the callback and requested number of bytes in case of timeout
-    this.read_requested = num_bytes;
-    this.cb_readSerial = callback;
-    
-    // Start the timer
-    var that = this;
-    if (this.read_timer == null) this.read_timer = this.timer.oneShot(timeout, function() {that.timerCallback();});
-    else this.read_timer.restart();
+        // Timer elapsed therefore get any bytes that have been acquired so far
+        this.cb_readSerial(this.readNC(this.read_requested));
+        this.read_requested = 0;
+    }
 };
 

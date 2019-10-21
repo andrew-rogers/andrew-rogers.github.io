@@ -113,15 +113,19 @@ Bootloader.prototype.getNumBytes = function() {
 Bootloader.prototype.getData = function(num_bytes) {
 
     var that = this;
+    var buffer = [];
     return new Promise(function(resolve, reject) {
 
         // Callback for serial read.
         var cb = function(rx) {
-            if (rx.length >= num_bytes) resolve(rx);
-            else {
-                err = new Error('Could not get all data requested.');
-                err.rx = rx;
+            if (rx.length == 0) {
+                var err = new Error('Could not get all data requested.');
+                err.rx = buffer;
                 reject(err);
+            }
+            else {
+                for (var n=0; n<rx.length; n++) buffer.push(rx[n]);
+                if (buffer.length >= num_bytes) resolve(rx);
             }
         }
 
