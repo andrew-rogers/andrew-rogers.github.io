@@ -37,14 +37,21 @@ var SerialWithTimeout = function(timer, serial) {
 
 SerialWithTimeout.prototype.read = function(num_bytes, timeout, callback) {
 
-    // Store the callback and requested number of bytes in case of timeout
-    this.read_requested = num_bytes;
-    this.cb_readSerial = callback;
+    // Check if there are enough bytes to satisfy request
+    if (this.read_buffer.length >= num_bytes) {
+        callback(this.readNC(num_bytes));
+    }
+    else {
 
-    // Start the timer
-    var that = this;
-    if (this.read_timer == null) this.read_timer = this.timer.oneShot(timeout, function() {that.timerCallback();});
-    else this.read_timer.restart(timeout);
+        // Store the callback and requested number of bytes in case of timeout
+        this.read_requested = num_bytes;
+        this.cb_readSerial = callback;
+
+        // Start the timer
+        var that = this;
+        if (this.read_timer == null) this.read_timer = this.timer.oneShot(timeout, function() {that.timerCallback();});
+        else this.read_timer.restart(timeout);
+    }
 };
 
 // Return up to num_bytes data pulled from the receive buffer.
