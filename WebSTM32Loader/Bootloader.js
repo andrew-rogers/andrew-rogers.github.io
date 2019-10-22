@@ -82,6 +82,15 @@ Bootloader.prototype.cmdReadMemory = function(address, num_bytes) {
     });
 };
 
+Bootloader.prototype.cmdWriteMemory = function(address, data) {
+    var that = this;
+    return this.sendCommand(0x31, 1000).then(function() {
+        return that.sendAddress(address);
+    }).then(function() {
+        return that.sendData(data);
+    });
+};
+
 Bootloader.prototype.sendCommand = function(cmd, timeout) {
 
     // Clear the read buffer.
@@ -158,6 +167,27 @@ Bootloader.prototype.sendNumBytes = function(num_bytes) {
 
     // Send command byte and its 1's compliment.
     this.serial.write([num_bytes, num_bytes^0xff]);
+
+    // Return the ACK/NACK promise
+    return this.ack(1000);
+};
+
+Bootloader.prototype.sendData = function(data) {
+
+    // Clear the read buffer.
+    this.serial.readNC(1000);
+
+    // Get length, data and checksum
+    var sum = (data.length-1) & 0xff;
+    var tx = [sum];
+    for (var n=0; n<data.length; n++) {
+        sum = sum ^ (data[n] & 0xff);
+        tx.push(data[n]);
+    }
+    tx.push(sum);
+
+    // Send length, data and checksum
+    this.serial.write(tx);
 
     // Return the ACK/NACK promise
     return this.ack(1000);

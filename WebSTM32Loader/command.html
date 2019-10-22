@@ -8,6 +8,7 @@
 
     <body>
         <div><button id="button_baud">Baud</button><button id="button_get">Get</button></div>
+        <div><button id="button_wr">Write</button></div>
         <textarea id="ta_cmd" rows="2" cols="25">7F</textarea>
         <button id="button_send">Send</button>
         <button id="button_clear">Clear log</button>
@@ -119,6 +120,17 @@ var allLoaded = function() {
         var RAM_ADDR = 0x20001000 >>> 0; // Address as unsigned 32-bit
         bootloader.cmdReadMemory(RAM_ADDR,16).then(function(result) {
             log("RMEM> " + result);
+        }).catch(function(err) {
+            log(err);
+        });
+    }
+
+    // Write button click handler
+    button_wr.onclick = function() {
+
+        var ADDR = 0x20001004 >>> 0; // Address as unsigned 32-bit
+        bootloader.cmdWriteMemory(ADDR,[0x5f,0xa5,0xf3,0xff]).then(function(result) {
+            log("WR> " + result);
         }).catch(function(err) {
             log(err);
         });
