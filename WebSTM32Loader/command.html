@@ -14,6 +14,7 @@
         <button id="button_clear">Clear log</button>
         <div id="div_download"></div>
         <textarea id="ta_log" rows="10" cols="45"></textarea>
+        <div><textarea id="ta_ihex" rows="10" cols="45"></textarea></div>
         <script>
 
 /**
@@ -47,6 +48,21 @@
 
 var button_gb = document.getElementById('button_gb');
 var ta_log = document.getElementById('ta_log');
+var ta_ihex = document.getElementById('ta_ihex');
+
+ta_ihex.value = ":020000042000DA\n" +
+":08100000001000204710002041\n" +
+":1010080080B485B000AF78600023FB600DE000235A\n" +
+":10101800BB6003E000BFBB680133BB60BB68B3F5CE\n" +
+":101028007A7FF7DBFB680133FB60FA687B689A42DA\n" +
+":10103800EDDB00BF00BF1437BD4680BC704780B5EC\n" +
+":1010480000AF094B9B69084A43F010039361074BB3\n" +
+":10105800074A5A60054BDB68044A83F40053D3609F\n" +
+":101068006420FFF7CDFFF5E70010024000100140B3\n" +
+":041078004444144494\n" +
+":0400000520001000C7\n" +
+":00000001FF\n"
+
 
 ta_log.value="";
 
