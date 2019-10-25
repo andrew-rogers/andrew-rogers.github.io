@@ -15,6 +15,7 @@
         <div id="div_download"></div>
         <textarea id="ta_log" rows="10" cols="45"></textarea>
         <div><textarea id="ta_ihex" rows="10" cols="45"></textarea></div>
+        <div><button id="button_prog">Prog</button></div>
         <script>
 
 /**
@@ -162,6 +163,44 @@ var allLoaded = function() {
     button_clear.onclick = function() {
         ta_log.value = "";
     }
+
+    // Prog button click handler
+    button_prog.onclick = function() {
+
+        // Get the Intel Hex from the textarea
+        var lines = ta_ihex.value.split(":");
+
+        var address_h = 0;
+
+        // Start promise chain with initial resolved promise.
+        var p = Promise.resolve();
+        for (var l = 0; l < lines.length; l++) {
+
+            // Convert ascii hex into byte values
+            var line_bytes = hex2bytes(lines[l].trim());
+
+            // Get header
+            var num_bytes = line_bytes[0];
+            var address = 0x100*line_bytes[1] + line_bytes[2];
+            var type = line_bytes[3];
+
+            // Get data
+            var data = line_bytes.slice(4,4+num_bytes);
+
+            // If address extension record
+            if (type == 4) address_h=0x1000000*data[0] + 0x10000*data[1];
+
+            // Add high 16 bits of address
+            address += address_h;
+
+            // Write data records to memory
+            if (type == 0 && num_bytes > 0) {
+                p = p.then(function() {
+                    return bootloader.cmdWriteMemory(address, data);
+                });
+            }
+        }
+    };
 
 };
 
