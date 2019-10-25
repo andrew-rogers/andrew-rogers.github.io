@@ -82,6 +82,13 @@ Bootloader.prototype.cmdReadMemory = function(address, num_bytes) {
     });
 };
 
+Bootloader.prototype.cmdGo = function(address) {
+    var that = this;
+    return this.sendCommand(0x21, 1000).then(function() {
+        return that.sendAddress(address);
+    });
+};
+
 Bootloader.prototype.cmdWriteMemory = function(address, data) {
     var that = this;
     return this.sendCommand(0x31, 1000).then(function() {

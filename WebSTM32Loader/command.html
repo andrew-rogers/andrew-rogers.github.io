@@ -174,18 +174,18 @@ var allLoaded = function() {
 
         // Start promise chain with initial resolved promise.
         var p = Promise.resolve();
-        for (var l = 0; l < lines.length; l++) {
+        for (let l = 0; l < lines.length; l++) {
 
             // Convert ascii hex into byte values
-            var line_bytes = hex2bytes(lines[l].trim());
+            let line_bytes = hex2bytes(lines[l].trim());
 
             // Get header
-            var num_bytes = line_bytes[0];
-            var address = 0x100*line_bytes[1] + line_bytes[2];
-            var type = line_bytes[3];
+            let num_bytes = line_bytes[0];
+            let address = 0x100*line_bytes[1] + line_bytes[2];
+            let type = line_bytes[3];
 
             // Get data
-            var data = line_bytes.slice(4,4+num_bytes);
+            let data = line_bytes.slice(4,4+num_bytes);
 
             // If address extension record
             if (type == 4) address_h=0x1000000*data[0] + 0x10000*data[1];
@@ -196,7 +196,14 @@ var allLoaded = function() {
             // Write data records to memory
             if (type == 0 && num_bytes > 0) {
                 p = p.then(function() {
-                    return bootloader.cmdWriteMemory(address, data);
+                    return bootloader.cmdWriteMemory(address>>>0, data);
+                });
+            }
+
+            if (type == 5 && data.length == 4) {
+                address = (data[0]<<24) + (data[1]<<16) + (data[2]<<8) + data[3];
+                p = p.then(function() {
+                    return bootloader.cmdGo(address);
                 });
             }
         }
