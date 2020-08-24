@@ -1,0 +1,42 @@
+AW{"type":"mjmd"}
+
+### GNU/Octave model
+GNU/Octave model for the HF noise dithered 1-bit ADC can be found [here](https://github.com/andrew-rogers/DSP/blob/master/octave/ns1bit.m).
+
+AW{"type":"diagram"}
+    var x1=100;
+    var x2=250;
+    var x3=320;
+    var x4=350;
+    var x5=480;
+    var y1=40;
+    var y2=120;
+    
+    var yc=(y1+y2)/2;
+    var p_ng = new Point(x1,y1);
+    var p_hpf = new Point(x2,y1);
+    var p_ss = new Point((x1+x2)/2,y2);
+    var p_ngb = new Point(x3,y1);
+    var p_ssb = new Point(x3,y2);
+    var p_adder = new Point(x4,yc);
+    var p_th = new Point(x5,yc);
+    var p_out = new Point(2*x5-x4,yc);
+
+    var ng = new Delay(p_ng,150,30,"RBS generator");
+    var hpf = new Delay(p_hpf,80,30,"HPF");
+    var ss = new Delay(p_ss,150,30,"LF signal");
+    var adder= new Adder(p_adder,20);
+    var th = new Delay(p_th,150,30,"Threshold");
+
+    fig.draw(ng);
+    fig.draw(hpf);
+    fig.draw(ss);
+    fig.draw(adder);
+    fig.draw(th);
+    fig.drawPolyLine([ng.getConnection(p_hpf), hpf.getConnection(p_ng)],'-->');
+    fig.drawPolyLine([hpf.getConnection(p_ngb), p_ngb, adder.getConnection(p_ngb)],'-->');
+    fig.drawPolyLine([ss.getConnection(p_ssb), p_ssb, adder.getConnection(p_ssb)],'-->');
+    fig.drawPolyLine([adder.getConnection(p_out), th.getConnection(p_adder)],'-->');
+    fig.drawPolyLine([th.getConnection(p_out), p_out],'-->');
+
+    
