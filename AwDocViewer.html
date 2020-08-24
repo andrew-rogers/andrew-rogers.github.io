@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" charset="UTF-8">
+        <script src="javascripts/AwDocRenderer.js"></script>
+        <script src="javascripts/Diagram/Geometry.js"></script>
+        <script src="javascripts/Diagram/Shapes/SignalProcessing.js"></script>
+        <script src="javascripts/Diagram/SvgFigure.js"></script>
+        <script src="javascripts/DiagramRenderer.js"></script>
+        <script src="javascripts/MathJaxMarkdownRenderer.js"></script>
+        <script src="javascripts/svgarray.js"></script>
+        <script src="javascripts/XML.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS-MML_SVG"></script>
+    </head>
+    <body>
+        <script>
+        
+var fn = window.location.search;
+
+if (fn.startsWith("?file=")) {
+    var fn = decodeURIComponent(fn.slice(6));
+    var aw="";
+
+    var awdr = new AwDocRenderer();
+    awdr.registerRenderer("mjmd", new MathJaxMarkdownRenderer());
+    awdr.registerRenderer("diagram", new DiagramRenderer());
+    //awdr.registerRenderer("awcpp", new AwCppRenderer(fn, new JsonRenderer()));
+    
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            awdr.render(xhr.responseText);
+        }
+    }
+    xhr.open('GET', fn);
+    xhr.send();
+
+    
+}
+
+        </script>
+    </body>
+</html>
+
