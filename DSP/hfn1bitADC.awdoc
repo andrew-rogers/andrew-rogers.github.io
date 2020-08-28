@@ -57,7 +57,7 @@ The Threshold (which may be just the binary input of a microcontroller) converts
 
 ### Aliasing
 
-As the PRBS is not passed through any anti-aliasing filter, it is important that the clock of the PRBS generator and the 1-bit sampler are exactly the same. If they differ slightly, aliasing will be present in the band of the measured signal. In practice, this can be readily achieved using the $\mathrm{I^2C}$ or $\mathrm{I^2S}$ interface of a microcontroller.
+As the PRBS is not passed through any anti-aliasing filter, it is important that the clock of the PRBS generator and the 1-bit sampler are exactly the same. If they differ slightly, aliasing will be present in the band of the measured signal. In practice, this can be readily achieved using the SPI or $\mathrm{I^2S}$ interface of a microcontroller.
 
 ## Modelling
 

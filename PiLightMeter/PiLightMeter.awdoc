@@ -1,0 +1,10 @@
+AW{"type":"mjmd"}
+
+# Light Meter for Raspberry Pi
+
+Source code for the Pi Light Meter can be found on [GitHub](https://github.com/andrew-rogers/DSP/tree/master/PiLightMeter).
+
+The [PRBS dithered ADC](AwDocViewer.html?file=DSP%2Fhfn1bitADC.awdoc) is used for analogue to digital conversion in this application.
+
+![Circuit](PiLightMeter/circuit.png)
+
