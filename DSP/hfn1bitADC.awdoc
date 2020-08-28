@@ -63,4 +63,4 @@ As the PRBS is not passed through any anti-aliasing filter, it is important that
 
 ### GNU/Octave model
 
-A GNU/Octave model for the HF noise dithered 1-bit ADC can be found [here](https://github.com/andrew-rogers/DSP/blob/master/octave/ns1bit.m).
+A GNU/Octave model for the HF noise dithered 1-bit ADC can be found [here](https://github.com/andrew-rogers/DSP/blob/master/octave/prbs1bit.m).
