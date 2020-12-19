@@ -1,5 +1,29 @@
 # Creating a Python module from C++ functions using pybind11
 
+## Setting up the build environment
+
+### Required dependencies for GNU/Linux
+
+Install required packages
+
+```
+$ python -m pip install pybind11
+$ python -m pip install numpy
+```
+
+### Required dependencies for Windows
+
+Install [MSYS2](https://www.msys2.org/)
+
+Install required packages using pacman from within MSYS2 command window
+
+```
+$ pacman -S mingw-w64-x86_64-pybind11
+$ pacman -S mingw-w64-x86_64-python
+$ pacman -S mingw-w64-x86_64-gcc
+$ pacman -S mingw-w64-x86_64-python-numpy
+```
+
 ## Creating the pybind11 bindings source file
 
 Create the file my_module.cpp which is mostly copied from the [pybind11 documentation](https://pybind11.readthedocs.io/en/stable/basics.html) but with a few extras added.
@@ -27,7 +51,9 @@ py::array_t<double> add_arrays(py::array_t<double> input1, py::array_t<double> i
     double *ptr2 = static_cast<double *>(buf2.ptr);
     double *ptr3 = static_cast<double *>(buf3.ptr);
 
-    for (size_t idx = 0; idx < buf1.shape[0]; idx++)
+    size_t len1 = static_cast<size_t>(buf1.shape[0]);
+
+    for (size_t idx = 0; idx < len1; idx++)
         ptr3[idx] = ptr1[idx] + ptr2[idx];
 
     return result;
@@ -46,15 +72,17 @@ py::array_t<double> half_length(py::array_t<double> input)
     
     double *ptr1 = static_cast<double *>(buf.ptr);
     double *ptr2 = static_cast<double *>(ret.ptr);
-    
-    for (size_t i = 0; i < buf.shape[0]; i++)
+
+    size_t len = static_cast<size_t>(buf.shape[0]);
+
+    for (size_t i = 0; i < len; i++)
     {
         ptr2[i] = ptr1[i];
         ptr1[i] = 0.0;
     }
-        
+
     result.resize({buf.shape[0]/2});
-    
+
     return result; 
 }
 
@@ -66,39 +94,12 @@ PYBIND11_MODULE(my_module, m)
 }
 ```
 
-## Building for GNU/Linux
-
-Install required packages
-
-```
-$ python -m pip install pybind11
-$ python -m pip install numpy
-```
+## Building
 
 To build the python extension module
 
 ```
-$ c++ -O3 -Wall -shared -std=c++11 -fPIC `python3 -m pybind11 --includes` my_module.cpp -o my_module`python3-config --extension-suffix`
-```
-
-
-## Building for Windows
-
-Install [MSYS2](https://www.msys2.org/)
-
-Install required packages using pacman from within MSYS2 command window
-
-```
-$ pacman -S mingw-w64-x86_64-pybind11
-$ pacman -S mingw-w64-x86_64-python
-$ pacman -S mingw-w64-x86_64-gcc
-$ pacman -S mingw-w64-x86_64-python-numpy
-```
-
-To build the python extension module
-
-```
-$ g++ -shared -std=c++11 -fPIC -I /mingw64/include/python3.8 -L /mingw64/lib my_module.cpp -o my_module.pyd -lpython3.8.dll
+$ c++ -O3 -Wall -shared -std=c++11 -fPIC `python3 -m pybind11 --includes` my_module.cpp -o my_module`python3-config --extension-suffix` `python3-config --libs`
 ```
 
 ## Testing
@@ -107,8 +108,19 @@ $ g++ -shared -std=c++11 -fPIC -I /mingw64/include/python3.8 -L /mingw64/lib my_
 #!/usr/bin/env python
 
 import my_module as mm
+import numpy as np
 
 s=mm.add_arrays([4,5],[3,2])
 print(s)
+
+# The input array will not be zeroed as it is first converted to double.
+a=np.array([2,5,6,2,4,5,2,8])
+b=mm.half_length(a)
+print('a:',a,'b:',b)
+
+# The input array type is double and a conversion is not performed. The C++ function will zero the input array.
+a=np.array([2.0,5,6,2,4,5,2,8])
+b=mm.half_length(a)
+print('a:',a,'b:',b)
 ```
 
