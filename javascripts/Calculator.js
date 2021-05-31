@@ -35,7 +35,6 @@ var Calculator = function(div) {
     this._createDivs();
     this.div.style.width="100%";
     this.div.style.display="block";
-
 };
 
 Calculator.prototype._hideSource = function() {
@@ -63,18 +62,13 @@ Calculator.prototype._getSections = function() {
 
 Calculator.prototype._createDivs = function() {
 
-    // Create div for header
-    var div_hdr = document.createElement("div");
-    div_hdr.innerHTML=this.sections["header"];
-    this.div.appendChild(div_hdr);
-    
     // Create div for equation
     var div_eqn = document.createElement("div");
     div_eqn.style.cssFloat = "left";
     div_eqn.style.width = "40%";
     div_eqn.innerHTML=this.sections["eqn"];
     this.div.appendChild(div_eqn);
-    
+
     // Create div for inputs
     this.div_inputs = document.createElement("div");
     this.input_objs=[];
@@ -87,7 +81,7 @@ Calculator.prototype._createDivs = function() {
     btn_calc.onclick = function(){that._calc()};
     this.div_inputs.appendChild(btn_calc);
     this.div.appendChild(this.div_inputs);
-    
+
     // Create div for outputs
     this.div_outputs = document.createElement("div");
     this.div_outputs.style.cssFloat = "left";
@@ -95,16 +89,11 @@ Calculator.prototype._createDivs = function() {
     this.output_objs=[];
     this._ui(this.sections["outputs"]);
     this.div.appendChild(this.div_outputs);
-    
+
     // Clear the float
     var br_clear=document.createElement("br");
     br_clear.style.clear = "left";
-    this.div.insertBefore(br_clear,div_footer);
-    
-    // Create div for footer
-    var div_footer = document.createElement("div");
-    div_footer.innerHTML=this.sections["footer"];
-    this.div.appendChild(div_footer);
+    this.div.appendChild(br_clear);
 };
 
 Calculator.prototype._ui = function(src) {

@@ -31,10 +31,8 @@ div.calc {
 <body>
     
 
-
-<div class="calc">
-%%HEADER
 <h2>Cut-off frequency of RC filter.</h2>
+<div class="calc">
 
 %%EQN
 The cut-off frequency, $f_c$, is given by $$f_c=\frac{1}{2\pi RC}$$
@@ -46,12 +44,83 @@ engInput("c", "Capacitance, $C$", "330n", 10)
 %%OUTPUTS
 engOutput("fc", "Cut-off frequency, $f_c$","Hz",10)
 
-%%FOOTER
-Footer would go here if I could think of one!
-
 %%CALC
 fc=1/(2*pi*r*c);
 </div>
+
+<h2>Reactance of Capacitor.</h2>
+<div class="calc">
+
+%%EQN
+The reactance of a capacitor, $X_c$, is given by $$X_c=-\frac{1}{\omega C}$$ where $\omega = 2\pi f$.
+
+%%INPUTS
+engInput("f", "Frequency, $f$",  "10k",  10)
+engInput("c", "Capacitance, $C$", "330n", 10)
+
+%%OUTPUTS
+engOutput("xc", "Reactance, $X_c$","Ohm",10)
+
+%%CALC
+xc=-1/(2*pi*f*c);
+</div>
+
+<h2>Wheelers Formula for Inductance.</h2>
+<h3>Single layer winding.</h3>
+<div class="calc">
+
+%%EQN
+The inductance of a single layer inductor, $L$, is given by $$L=-\frac{N^2 r^2}{9r+10l}$$ where $L$ is the inductance in $\mathrm{\mu H}$, $r$ is the radius of the coil in inches, $l$ is the length in inches and $N$ is the number of turns.
+
+%%INPUTS
+engInput("N", "Number of turns, $N$",  "10",  10)
+engInput("r", "Radius in inches, $r$", "0.125", 10)
+engInput("l", "Length in inches, $l$", "0.375", 10)
+
+%%OUTPUTS
+engOutput("L", "Inductance, $L$","H",10)
+
+%%CALC
+L=N*N*r*r/(9*r+10*l)/1e6
+</div>
+<h3>Thick coil winding.</h3>
+<div class="calc">
+
+%%EQN
+The inductance of a multi layer inductor, $L$, is given by $$L=-\frac{0.8N^2 r^2}{6r+9l+10c}$$ where $L$ is the inductance in $\mathrm{\mu H}$, $r$ is the radius of the coil in inches, $l$ is the length in inches, $c$ is the coil thickness in inches and $N$ is the number of turns.
+
+%%INPUTS
+engInput("N", "Number of turns, $N$",  "40",  10)
+engInput("r", "Radius in inches, $r$", "0.125", 10)
+engInput("l", "Length in inches, $l$", "0.375", 10)
+engInput("c", "Coil thickness in inches, $c$", "0.1", 10)
+
+%%OUTPUTS
+engOutput("L", "Inductance, $L$","H",10)
+
+%%CALC
+L=0.8*N*N*r*r/(6*r+9*l+10*c)/1e6
+</div>
+Note: The thickness is not the coil diameter. It is the number of layers multilplied by wire thickness.
+<h3>Spiral winding.</h3>
+<div class="calc">
+
+%%EQN
+The inductance of a spiral wound inductor, $L$, is given by $$L=-\frac{N^2 r^2}{8r+11c}$$ where $L$ is the inductance in $\mathrm{\mu H}$, $r$ is the radius of the coil in inches, $c$ is the coil thickness in inches and $N$ is the number of turns.
+
+%%INPUTS
+engInput("N", "Number of turns, $N$",  "10",  10)
+engInput("r", "Radius in inches, $r$", "1", 10)
+engInput("c", "Coil thickness in inches, $c$", "0.25", 10)
+
+%%OUTPUTS
+engOutput("L", "Inductance, $L$","H",10)
+
+%%CALC
+L=N*N*r*r/(8*r+11*c)/1e6
+</div>
+Formula taken from <a href="https://www.allaboutcircuits.com/textbook/reference/chpt-1/inductor-sizing-equation/">All About Circuits</a>.
+
         
 <script>
 
