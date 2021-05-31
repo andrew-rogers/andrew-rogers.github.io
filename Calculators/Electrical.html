@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width">
+  <title>Electrical calculators</title>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="../javascripts/Calculator.js"></script>
+  <script>
+MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']]
+  }
+};
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  
+  <style>
+func {
+  display: none;
+}
+
+div.calc {
+  display: none;
+}
+  </style>
+</head>
+
+<body>
+    
+
+
+<div class="calc">
+%%HEADER
+<h2>Cut-off frequency of RC filter.</h2>
+
+%%EQN
+The cut-off frequency, $f_c$, is given by $$f_c=\frac{1}{2\pi RC}$$
+
+%%INPUTS
+engInput("r", "Resistance, $R$",  "8k2",  10)
+engInput("c", "Capacitance, $C$", "330n", 10)
+
+%%OUTPUTS
+engOutput("fc", "Cut-off frequency, $f_c$","Hz",10)
+
+%%FOOTER
+Footer would go here if I could think of one!
+
+%%CALC
+fc=1/(2*pi*r*c);
+</div>
+        
+<script>
+
+function layout(div_calc) {
+    var calc = new Calculator(div_calc);
+}
+
+var els = document.getElementsByClassName('calc');
+for (var i=0; i<els.length; i++) {
+    layout(els[i]);
+}
+</script>
+
+</body>
+
+</html>
+
