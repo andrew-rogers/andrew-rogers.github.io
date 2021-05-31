@@ -26,7 +26,36 @@
  */
 
 // Dependencies:
-//   https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js
+//   https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js
+
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']]
+  },
+  svg: {
+    fontCache: 'global'
+  },
+  startup: {
+    ready: () => {
+      expandCalcs();
+      MathJax.startup.defaultReady();
+    }
+  }
+};
+
+(function () {
+  var script = document.createElement('script');
+  script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js';
+  script.async = true;
+  document.head.appendChild(script);
+})();
+
+function expandCalcs() {
+    var els = document.getElementsByClassName('calc');
+    for (var i=0; i<els.length; i++) {
+        new Calculator(els[i]);
+    }
+}
 
 var Calculator = function(div) {
     this.div = div;
