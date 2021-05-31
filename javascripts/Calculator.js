@@ -166,6 +166,7 @@ Calculator.prototype._toFloat = function(str) {
         if (c == 'p') mult=1e-12;
         if (c == 'n') mult=1e-9;
         if (c == 'u') mult=1e-6;
+        if (c == '\u03BC') mult=1e-6;
         if (c == 'm') mult=1e-3;
         if (c == 'k') mult=1e3;
         if (c == 'M') mult=1e6;
@@ -184,7 +185,7 @@ Calculator.prototype._toEngStr = function(value) {
     while (exp>-12 && (val< 1.0  && val> -1.0 )) {exp=exp-3; val=val*1000;}
     if (exp == -12) letter='p';
     if (exp == -9 ) letter='n';
-    if (exp == -6 ) letter='u';
+    if (exp == -6 ) letter='\u03BC';
     if (exp == -3 ) letter='m';
     if (exp ==  3 ) letter='k';
     if (exp ==  6 ) letter='M';
