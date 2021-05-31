@@ -18,10 +18,6 @@ MathJax = {
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
   
   <style>
-func {
-  display: none;
-}
-
 div.calc {
   display: none;
 }
@@ -48,21 +44,55 @@ engOutput("fc", "Cut-off frequency, $f_c$","Hz",10)
 fc=1/(2*pi*r*c);
 </div>
 
+<h2>Resonant frequency of LC circuit.</h2>
+<div class="calc">
+
+%%EQN
+The resonant frequency, $f_o$, is given by $$f_o=\frac{1}{2\pi \sqrt{LC}}$$
+
+%%INPUTS
+engInput("l", "Inductance, $L$",  "120&mu;",  10)
+engInput("c", "Capacitance, $C$", "330n", 10)
+
+%%OUTPUTS
+engOutput("fc", "Resonant frequency, $f_o$","Hz",10)
+
+%%CALC
+fc=1/(2*pi*Math.sqrt(l*c));
+</div>
+
 <h2>Reactance of Capacitor.</h2>
 <div class="calc">
 
 %%EQN
-The reactance of a capacitor, $X_c$, is given by $$X_c=-\frac{1}{\omega C}$$ where $\omega = 2\pi f$.
+The reactance of a capacitor, $X_C$, is given by $$X_C=-\frac{1}{\omega C}$$ where $\omega = 2\pi f$.
 
 %%INPUTS
 engInput("f", "Frequency, $f$",  "10k",  10)
 engInput("c", "Capacitance, $C$", "330n", 10)
 
 %%OUTPUTS
-engOutput("xc", "Reactance, $X_c$","Ohm",10)
+engOutput("xc", "Reactance, $X_C$","Ohm",10)
 
 %%CALC
 xc=-1/(2*pi*f*c);
+</div>
+
+<h2>Reactance of Inductor.</h2>
+<div class="calc">
+
+%%EQN
+The reactance of an inductor, $X_L$, is given by $$X_L=\omega L$$ where $\omega = 2\pi f$.
+
+%%INPUTS
+engInput("f", "Frequency, $f$",  "100k",  10)
+engInput("l", "Inductance, $L$", "3&mu;", 10)
+
+%%OUTPUTS
+engOutput("xl", "Reactance, $X_L$","Ohm",10)
+
+%%CALC
+xl=2*pi*f*l;
 </div>
 
 <h2>Wheelers Formula for Inductance.</h2>
