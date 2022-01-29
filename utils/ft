@@ -1,0 +1,243 @@
+#!/bin/bash
+
+#    ft - File transfer utility
+#    Copyright (C) 2022  Andrew Rogers
+#
+#    This program is free software; you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation; either version 2 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License along
+#    with this program; if not, write to the Free Software Foundation, Inc.,
+#    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+DIR_CONF="${HOME}/.ft"
+FILE_CONF="$DIR_CONF/config"
+
+cmd_add()
+{
+    DIR="$(check_dir "$1")"
+
+    if [ -d "$DIR" ]; then
+        TAG=$(get_tag "$DIR")
+        if [ -n "$TAG" ]; then
+            err "Already added."
+        else
+            TAG=$(create_tag)
+            mkdir -p "${DIR_CONF}/${TAG}"
+            echo "$TAG $DIR" >> "$FILE_CONF"
+        fi
+    fi
+}
+
+cmd_get_dir()
+{
+    get_dir "$1"
+}
+
+cmd_help()
+{
+    err "Valid commands:"
+    err "    add"
+    err "    help"
+    err "    mkstash"
+    err "    push"
+}
+
+cmd_link()
+{
+    tag="$(check_tag "$1")"
+    dir="$(check_dir "$2")"
+    if [ -n "$tag" ]; then
+        if [ -d "$dir" ]; then
+            ctag=$(get_tag "$dir")
+            if [ -n "$ctag" ]; then
+                err "Directory '$dir' already linked to tag '$ctag'."
+            else
+                cdir=$(get_dir "$tag")
+                if [ -n "$cdir" ]; then
+                    err "Directory '$cdir' already linked to tag '$tag'."
+                else
+                    echo "$tag $dir" >> "$FILE_CONF"
+                fi
+            fi
+        fi
+    else
+        err "Tag not specified or invalid."
+    fi
+}
+
+cmd_mkstash()
+{
+    tag="$(check_tag "$1")"
+    inc=0
+    if [ -n "$tag" ]; then
+        sdir="$DIR_CONF/$tag/stash"
+        mkdir -p "$sdir"
+        while [ -d "$sdir/$inc" ]; do
+            inc=$[$inc+1]
+        done 
+        echo "$sdir/$inc"
+    else
+        err "Tag not specified or invalid."
+    fi
+    
+}
+
+cmd_pull()
+{
+    server="$1"
+    if [ -n "$server" ]; then
+        tag="$(get_tag)"
+        if [ -n "$tag" ]; then
+            src="$(remote_ft "$server" get_dir "$tag")"
+            dst="$(cmd_mkstash "$tag")"
+            if [ -n "$src" ]; then
+                err "Remote dir '$src'."
+                err "Local stash dir '$dst'."
+                scp -r "$server:$src" "$dst"
+            else
+                err "Remote directory not found."
+            fi
+        else
+            err "Directory not in config."
+        fi
+    else
+        err "Remote server not specified."
+    fi
+}
+
+cmd_push()
+{
+    server="$1"
+    if [ -n "$server" ]; then
+        tag="$(get_tag)"
+        if [ -n "$tag" ]; then
+            dst="$(remote_ft "$server" mkstash "$tag")"
+            if [ -n "$dst" ]; then
+                err "Remote stash dir '$dst'."
+                scp -r "$(pwd)" "$server:$dst"
+            else
+                err "Remote directory not found."
+            fi
+        else
+            err "Directory not in config."
+        fi
+    else
+        err "Remote server not specified."
+    fi
+}
+
+cmd_test()
+{
+    # Use this to test the private functions below
+    $*
+}
+
+check_conf()
+{
+    if [ ! -f "$FILE_CONF" ]; then
+        err "Configuration file not found, creating it!"
+        mkdir -p "${DIR_CONF}"
+        touch "$FILE_CONF"     
+    fi
+}
+
+check_dir()
+{
+    DIR="$1"
+
+    if [ -z "$DIR" ]; then
+        # Use working directory
+        DIR=$(pwd)
+    fi
+    
+    if [ -d "$DIR" ]; then
+        # Get absolute path
+        DIR=$(cd "$DIR" && pwd)
+        echo "$DIR"
+    else
+        err "Directory '$DIR' does not exist."
+    fi
+}
+
+check_tag()
+{
+    tag="$1"
+    if [ "${#tag}" == "17" ]; then
+        echo "$tag"
+    fi
+}
+
+create_tag()
+{
+    date +%Y-%m-%d_%H%M%S
+}
+
+err()
+{
+    echo "$@" 1>&2
+}
+
+get_dir()
+{
+    tag="$(check_tag "$1")"
+    check_conf
+
+    # Iterate lines in file | for last line if no newline
+    #                       |
+    while IFS="" read -r l || [ -n "$l" ]
+    do
+        cdir="${l:18}"
+        ctag="${l:0:17}"
+        if [ "$ctag" == "$tag" ]; then
+            cdir="$(check_dir "$cdir")"
+            echo "$cdir"
+            break
+        fi
+    done < "$FILE_CONF"
+}
+
+get_tag()
+{
+    DIR="$(check_dir "$1")"
+    
+    if [ -d "$DIR" ]; then
+    
+        check_conf
+
+        # Iterate lines in file | for last line if no newline
+        #                       |
+        while IFS="" read -r l || [ -n "$l" ]
+        do
+            cdir="${l:18}"
+            ctag="${l:0:17}"
+            if [ "$cdir" == "$DIR" ]; then
+                echo "${ctag}"
+                break
+            fi
+        done < "$FILE_CONF"
+    fi
+}
+
+remote_ft()
+{
+    server="$1"
+    shift
+    ssh "$server" ft $*
+}
+
+CMD="$1"
+if [ -z "$CMD" ]; then
+    cmd_help
+else
+    shift
+    "cmd_$CMD" $*
+fi
+
