@@ -73,6 +73,20 @@ cmd_link()
     fi
 }
 
+cmd_list()
+{
+    server="$1"
+    if [ -n "$server" ]; then
+        remote_ft "$server" list
+    else
+        echo "---Config---"
+        cat "$FILE_CONF"
+        echo
+        echo "---Stashes---"
+        ls -1 "$DIR_CONF" | grep _
+    fi
+}
+
 cmd_mkstash()
 {
     tag="$(check_tag "$1")"
