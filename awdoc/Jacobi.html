@@ -196,15 +196,53 @@ JEF.agm_am = function(u,m) {
   let c = Math.sqrt(m);
   [a, b, c] = JEF.agm(a, b, c);
 
-  let len = a.length;
-  let phi = (2.0**(len-1)) * a[len-1] * u;
-  for (let n=len-1; n>0; n--) {
+  let N = a.length - 1;
+  let phi = (2.0 ** N) * a[N] * u;
+  for (let n = N; n > 0; n--) {
     let x = c[n] * Math.sin(phi) / a[n];
-    phi = (Math.asin(x) + phi)/2.0;
+    phi = (Math.asin(x) + phi) / 2.0;
   }
 
   return phi;
 }
+
+AW{"type":"mjmd"}
+Carlson Symmetric Form
+----------------------
+
+The incomplete elliptical integrals can also the evaluated by the [numeric evaluation of the Carlson symmetric form](https://en.wikipedia.org/wiki/Carlson_symmetric_form#Numerical_evaluation)
+
+$$ \lambda_n = \sqrt{x_n y_n} + \sqrt{y_n z_n} + \sqrt{z_n x_n} $$
+
+$$ x_{n+1} = \frac{x_n + \lambda_n}{4}, y_{n+1} = \frac{y_n + \lambda_n}{4}, z_{n+1} = \frac{z_n + \lambda_n}{4} $$
+
+AW{"type":"javascript"}
+JEF.Rf = function(x,y,z) {
+  let arr_x = [];
+  let arr_y = [];
+  let arr_z = [];
+
+  for (let n = 0; n < 20; n++) {
+    arr_x.push(x);
+    arr_y.push(y);
+    arr_z.push(z);
+
+    let lambda = Math.sqrt(x * y) + Math.sqrt(y * z) + Math.sqrt(z * x);
+    x = (x + lambda) / 4;
+    y = (y + lambda) / 4;
+    z = (z + lambda) / 4;
+  }
+
+  return [arr_x, arr_y, arr_z];
+}
+
+AW{"type":"javascript"}
+[x,y,z] = JEF.Rf(0.7,0.1,0.4);
+plot(x).name('x');
+plot(y).name('y');
+plot(z).name('z');
+xlabel('Iteration (n)');
+      
 		</textarea>
 		<script>
       new AwDocViewer( "serverless" );
