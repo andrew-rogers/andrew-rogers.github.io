@@ -222,10 +222,12 @@ JEF.Rf = function(x,y,z) {
   let arr_y = [];
   let arr_z = [];
 
-  for (let n = 0; n < 20; n++) {
+  for (let n = 0; n < 100; n++) {
     arr_x.push(x);
     arr_y.push(y);
     arr_z.push(z);
+    let error = Math.abs((x-y)/z) + Math.abs((y-z)/x) + Math.abs((z-x)/y);
+    if (error < Number.EPSILON) break;
 
     let lambda = Math.sqrt(x * y) + Math.sqrt(y * z) + Math.sqrt(z * x);
     x = (x + lambda) / 4;
@@ -242,6 +244,14 @@ plot(x).name('x');
 plot(y).name('y');
 plot(z).name('z');
 xlabel('Iteration (n)');
+
+AW{"type":"javascript"}
+let m = 0.4;
+let rf = JEF.Rf(0, 1-m, 1);
+let rf_arr_x = rf[0];
+let mu = rf_arr_x[rf_arr_x.length-1];
+let K = 1/Math.sqrt(mu);
+console.log(`K(${m}) = ${K}`);
       
 		</textarea>
 		<script>
