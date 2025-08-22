@@ -6,6 +6,14 @@
 	</head>
 	<body>
 		<textarea id="aw_json" class="awjson" hidden>
+
+AW{"type":"javascript", "hidden":"true"}
+let id = AndrewWIDE.suspend("Loading ellip.js");
+require(['ellip'], function (e) {
+  window.EL = e;
+  AndrewWIDE.resume(id);
+});
+
 AW{"type":"mjmd"}
 
 Jacobi Elliptic Functions
