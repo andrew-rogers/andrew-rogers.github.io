@@ -13,6 +13,8 @@ Jacobi Elliptic Functions
 
 [Jacobian Elliptic Function Tables](https://www.dbraulibrary.org.in/RareBooks/Jacobian%20elliptic%20function%20tables.pdf)
 
+The Legendre form incomplete elliptic integral of the frist kind is defined as 
+
 $$ F(\varphi,m) = \int_0^\varphi \frac{1}{\sqrt{1-m\sin^2\theta}}\mathrm{d}\theta $$
 
 Complete Elliptic Integral
@@ -21,6 +23,8 @@ Complete Elliptic Integral
 $$ K(m) = F\left(\frac{\pi}{2},m\right) $$
 
 From tables pg 42 $ K(0.4) = 1.77752 $
+
+The Complete Elliptic Integral can be computed using numerical integration as below:
 
 AW{"type":"javascript"}
 function integrate(func, ll, ul, N) {
@@ -60,6 +64,8 @@ Jacobi Amplitude
 
 $$ \mathrm{am}(u ,m) = \varphi $$
 
+As the Jacobi Amplutide function is the inverse of $u = F(\varphi,m)$, a binary search is performed to evaluate $\mathrm{am}(u,m)$. 
+
 AW{"type":"javascript"}
 
 function find(func, ll, ul, y) {
@@ -78,6 +84,7 @@ JEF.am = function(u, m) {
 }
 
 AW{"type":"mjmd"}
+The AGM is a more efficient means of evaluating $\mathrm{am}(u,m)$ and will be presented later.
 
 Jacobi sn(u,m)
 --------------
@@ -125,29 +132,74 @@ plot(x,y);
 xlabel("u");
 ylabel(`sn(u,${m})`);
 
+AW{"type":"mjmd"}
+Arithmetic-Geometric Mean (AGM)
+-------------------------------
+
+The definition of the AGM algorithm can be found in [DLMF](https://dlmf.nist.gov/22.20).
+
+$$ \begin{align}
+      a_n &= \frac{a_{n-1}+b_{n-1}}{2} \\
+      b_n &= \sqrt{a_{n-1}b_{n-1}} \\
+      c_n &= \frac{a_{n-1}-b_{n-1}}{2}
+\end{align} $$
+
+Iterations are performed until $c_N$ is zero to the desired accuracy. For $c_N < \epsilon$, $N$ is typically five or six.
+$\epsilon$ is the [Machine epsilon](https://en.wikipedia.org/wiki/Machine_epsilon).
+
 AW{"type":"javascript"}
-JEF.agm = function(u,m) {
+JEF.agm = function(a,b,c) {
   let arr_a = [];
+  let arr_b = [];
   let arr_c = [];
-  let a = 1.0;
-  let b = Math.sqrt(1.0 - m);
-  let c = Math.sqrt(m);
-  for (let n=0; n<20; n++) {
+  for (let n = 0; n < 20; n++) {
     arr_a.push(a);
+    arr_b.push(b);
     arr_c.push(c);
     if (Math.abs(c/a) < Number.EPSILON) break;
-    
+
     let ta = a;
     let tb = b;
     a = (ta + tb) / 2.0;
     b = Math.sqrt(ta * tb);
     c = (ta - tb) /2.0;
   }
+  return [arr_a, arr_b, arr_c];
+}
 
-  let len = arr_a.length;
-  let phi = (2.0**(len-1)) * arr_a[len-1] * u;
+AW{"type":"mjmd"}
+The graph plot below shows a and b converging very rapidly.
+      
+AW{"type":"javascript"}
+[a, b, c] = JEF.agm(1, 0.3, 0.5);
+
+plot(a).name('a');
+plot(b).name('b');
+plot(c).name('c');
+xlabel('iteration (n)');
+
+AW{"type":"mjmd"}
+To use the AGM to evaluate the Jacobi Amplitude function, $\mathrm{am}(u,m)$, a reverse iteration using the AGM iteration values is performed
+
+$$ \varphi_N = 2^N a_N u $$
+$$ x_n = \frac{c_n}{a_n} \sin(\varphi_n) $$
+$$ \varphi_{n-1} = \frac{\mathrm{arcsin}(x_n)+\varphi_n}{2} $$
+
+The AGM iteration values are evaluated by initialising the AGM with $a_0 = 1.0$, $b_0 = k^\prime$ and $c_0 = k$.
+
+DLMF uses $k$ whereas the tables use $m$, they are related by $k = \sqrt{m}$ and $k^\prime = \sqrt{1-m}$.
+
+AW{"type":"javascript"}
+JEF.agm_am = function(u,m) {
+  let a = 1.0;
+  let b = Math.sqrt(1.0 - m); // DLMF uses k, k' whereas the tables use m and 1-m. m=k^2
+  let c = Math.sqrt(m);
+  [a, b, c] = JEF.agm(a, b, c);
+
+  let len = a.length;
+  let phi = (2.0**(len-1)) * a[len-1] * u;
   for (let n=len-1; n>0; n--) {
-    let x = arr_c[n] * Math.sin(phi) / arr_a[n];
+    let x = c[n] * Math.sin(phi) / a[n];
     phi = (Math.asin(x) + phi)/2.0;
   }
 
