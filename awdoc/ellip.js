@@ -71,6 +71,23 @@ define(['exports'], (function (exports) { 'use strict';
     return phi;
   }
 
+  function scdp(u, m) {
+    let arr_u = [u];
+    if (u.constructor === Array) arr_u = u;
+    let arr_am = am(arr_u, m);
+    let arr_ret = [];
+    for (let n = 0; n < arr_u.length; n++) {
+      let phi = arr_am[n];
+      let s = Math.sin(phi);
+      let c = Math.cos(phi);
+      let d = Math.sqrt(1 - m * s * s); // DLMF 22.20.5
+      arr_ret.push({sn: s, cn: c, dn: d, phi: phi});
+    }
+    let ret = arr_ret[0];
+    if (u.constructor === Array) ret = arr_ret;
+    return ret;
+  }
+
   // ------ Carlson Symmetric Form ------
 
   // https://en.wikipedia.org/wiki/Carlson_symmetric_form
@@ -105,5 +122,6 @@ define(['exports'], (function (exports) { 'use strict';
   exports.F = F;
   exports.K = K;
   exports.am = am;
+  exports.scdp = scdp;
 
 }));

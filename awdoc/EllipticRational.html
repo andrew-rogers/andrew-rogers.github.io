@@ -40,14 +40,8 @@ let m = 1 / (xi * xi);
 let u = [];
 let K = Ellip.K(m);
 for (let n = 1; n <= N; n++) u.push(K * (2 * n - 1) / N);
-let am = Ellip.am(u, m);
-
-function cd(phi) {
-  const sn = Math.sin(phi);
-  const cn = Math.cos(phi);
-  const dn = Math.sqrt(1 - m * sn * sn);
-  return cn / dn;
-}
+let scdp = Ellip.scdp(u, m);
+let cd = scdp.map((o) => o.cn / o.dn);
 
 function eval_poly(roots, x) {
   let prod = 1;
@@ -55,20 +49,24 @@ function eval_poly(roots, x) {
   return prod;
 }
 
-let z = am.map(cd);
-let p = z.map((v) => xi / v);
+let z = cd;
+let p = cd.map((v) => xi / v);
 
-let r0 = 130;
+let r0 = eval_poly(p,1) / eval_poly(z,1);
 let x = [];
 let y = [];
-for(let n = 0; n < 1000; n++) {
+for(let n = 0; n < 500; n++) {
   let x_val = n /100;
   x.push(x_val);
   let y_val = Math.abs(r0 * eval_poly(z,x_val) / eval_poly(p, x_val));
-  if (y_val > 1000) y_val = 1000;
+  y_val = Math.log10(y_val);
+  if (y_val>(0.7*N+2.2))y_val = Number.NaN;
+  if (y_val<-2)y_val = Number.NaN;
   y.push(y_val);
 }
 plot(x, y);
+xlabel("x");
+ylabel("log<sub>10</sub>(|R|)");
       
 		</textarea>
 		<script>
