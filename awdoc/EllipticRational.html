@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" charset="UTF-8">
+    <script src="AndrewWIDE.js"></script>
+	</head>
+	<body>
+		<textarea id="aw_json" class="awjson" hidden>
+
+AW{"type":"javascript", "hidden":"true"}
+let id = AndrewWIDE.suspend("Loading ellip.js");
+require(['ellip'], function (e) {
+  window.Ellip = e;
+  AndrewWIDE.resume(id);
+});
+
+AW{"type":"mjmd"}
+
+Elliptic Rational Functions
+===========================
+
+The page present plots of the [elliptic rational function](https://en.wikipedia.org/wiki/Elliptic_rational_functions). [Jacobi elliptic functions](Jacobi.html) are used to evaluate roots of the elliptic rational function discussed later.
+
+The elliptic rational funnction is evaluated as a [ratio of polynomials](https://en.wikipedia.org/wiki/Elliptic_rational_functions#Expression_as_a_ratio_of_polynomials).
+
+$$ R_N(\xi, x) = r_0 \frac{\prod\limits_{i=1}^N(x-x_i)}{\prod\limits_{i=1}^N(x-x_{pi})} \quad\text{(for N even)} $$
+
+$$ R_N(\xi, x) = r_0 x \frac{\prod\limits_{i=1}^{N-1}(x-x_i)}{\prod\limits_{i=1}^{N-1}(x-x_{pi})} \quad\text{(for N even)} $$
+
+
+
+AW{"type":"javascript"}
+// TODO: Plot fourth order for xi = 1.4
+
+
+      
+		</textarea>
+		<script>
+      new AwDocViewer( "serverless" );
+		</script>
+	</body>
+</html>

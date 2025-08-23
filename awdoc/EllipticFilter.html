@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" charset="UTF-8">
+    <script src="AndrewWIDE.js"></script>
+	</head>
+	<body>
+		<textarea id="aw_json" class="awjson" hidden>
+
+AW{"type":"javascript", "hidden":"true"}
+let id = AndrewWIDE.suspend("Loading ellip.js");
+require(['ellip'], function (e) {
+  window.Ellip = e;
+  AndrewWIDE.resume(id);
+});
+
+AW{"type":"mjmd"}
+
+Elliptic Filter Design
+======================
+
+The design of [Elliptic filter](https://en.wikipedia.org/wiki/Elliptic_filter) requires the use the [elliptic rational function](EllipticRational.html) and [Jacobi elliptic functions](Jacobi.html).
+
+The gain of the filter given angular frequency, $\omega$, is
+
+$$ G_N(\omega) = \frac{1}{\sqrt{1+\epsilon^2 R_N^2(\xi,\omega/\omega_0)}} $$
+
+
+AW{"type":"javascript"}
+//  TODO: Plot Gain against omega
+
+
+
+      
+		</textarea>
+		<script>
+      new AwDocViewer( "serverless" );
+		</script>
+	</body>
+</html>
