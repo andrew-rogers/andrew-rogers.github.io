@@ -52,13 +52,22 @@ define(['exports'], (function (exports) { 'use strict';
     let c = Math.sqrt(m);
     [a, b, c] = agm(a, b, c);
 
-    let N = a.length - 1;
-    let phi = (2.0 ** N) * a[N] * u;
-    for (let n = N; n > 0; n--) {
-      let x = c[n] * Math.sin(phi) / a[n];
-      phi = (Math.asin(x) + phi) * 0.5;
+    let arr_u = [u];
+    if (u.constructor === Array) arr_u = u;
+
+    let arr_phi = [];
+    for (let k = 0; k < arr_u.length; k++) {
+      let N = a.length - 1;
+      let phi = (2.0 ** N) * a[N] * arr_u[k];
+      for (let n = N; n > 0; n--) {
+        let x = c[n] * Math.sin(phi) / a[n];
+        phi = (Math.asin(x) + phi) * 0.5;
+      }
+      arr_phi.push(phi);
     }
 
+    let phi = arr_phi[0];
+    if (u.constructor === Array) phi = arr_phi;
     return phi;
   }
 
@@ -86,7 +95,7 @@ define(['exports'], (function (exports) { 'use strict';
   function F(phi, m) {
     const c = Math.cos(phi);
     const s = Math.sin(phi);
-    return Rf(c * c, 1 - m * s * s, 1);
+    return s * Rf(c * c, 1 - m * s * s, 1);
   }
 
   function K(m) {

@@ -23,16 +23,52 @@ The page present plots of the [elliptic rational function](https://en.wikipedia.
 
 The elliptic rational funnction is evaluated as a [ratio of polynomials](https://en.wikipedia.org/wiki/Elliptic_rational_functions#Expression_as_a_ratio_of_polynomials).
 
-$$ R_N(\xi, x) = r_0 \frac{\prod\limits_{i=1}^N(x-x_i)}{\prod\limits_{i=1}^N(x-x_{pi})} \quad\text{(for N even)} $$
+$$ R_N(\xi, x) = r_0 \frac{\prod\limits_{n=1}^N(x-x_n)}{\prod\limits_{n=1}^N(x-x_{pn})} \quad\text{(for N even)} $$
 
-$$ R_N(\xi, x) = r_0 x \frac{\prod\limits_{i=1}^{N-1}(x-x_i)}{\prod\limits_{i=1}^{N-1}(x-x_{pi})} \quad\text{(for N even)} $$
+$$ R_N(\xi, x) = r_0 x \frac{\prod\limits_{n=1}^{N-1}(x-x_n)}{\prod\limits_{n=1}^{N-1}(x-x_{pn})} \quad\text{(for N odd)} $$
+
+$$ x_n = \mathrm{cd}\left(K(m)\frac{2n-1}{N}, m \right) \quad\text{and}\quad x_{pn} = \frac{\xi}{x_n} \quad\text{where}\quad m=\frac{1}{\xi^2} $$
 
 
 
 AW{"type":"javascript"}
-// TODO: Plot fourth order for xi = 1.4
+// Plot fourth order rational function for xi = 1.4
+let N = 4;
+let xi = 1.4;
+let m = 1 / (xi * xi);
 
+let u = [];
+let K = Ellip.K(m);
+for (let n = 1; n <= N; n++) u.push(K * (2 * n - 1) / N);
+let am = Ellip.am(u, m);
 
+function cd(phi) {
+  const sn = Math.sin(phi);
+  const cn = Math.cos(phi);
+  const dn = Math.sqrt(1 - m * sn * sn);
+  return cn / dn;
+}
+
+function eval_poly(roots, x) {
+  let prod = 1;
+  for (let n=0; n < roots.length; n++) prod *= x - roots[n];
+  return prod;
+}
+
+let z = am.map(cd);
+let p = z.map((v) => xi / v);
+
+let r0 = 130;
+let x = [];
+let y = [];
+for(let n = 0; n < 1000; n++) {
+  let x_val = n /100;
+  x.push(x_val);
+  let y_val = Math.abs(r0 * eval_poly(z,x_val) / eval_poly(p, x_val));
+  if (y_val > 1000) y_val = 1000;
+  y.push(y_val);
+}
+plot(x, y);
       
 		</textarea>
 		<script>
