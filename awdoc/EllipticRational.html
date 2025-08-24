@@ -29,7 +29,48 @@ $$ R_N(\xi, x) = r_0 x \frac{\prod\limits_{n=1}^{N-1}(x-x_n)}{\prod\limits_{n=1}
 
 $$ x_n = \mathrm{cd}\left(K(m)\frac{2n-1}{N}, m \right) \quad\text{and}\quad x_{pn} = \frac{\xi}{x_n} \quad\text{where}\quad m=\frac{1}{\xi^2} $$
 
+Fourth order, $N=3$, selectivity factor, $\xi = 1.4$.
 
+AW{"type":"javascript"}
+// Plot third order rational function for xi = 1.4
+let N = 3;
+let xi = 1.4;
+let m = 1 / (xi * xi);
+
+let u = [];
+let K = Ellip.K(m);
+for (let n = 1; n < N; n++) u.push(K * (2 * n - 1) / N);
+let scdp = Ellip.scdp(u, m);
+let cd = scdp.map((o) => o.cn / o.dn);
+
+function eval_poly(roots, x) {
+  let prod = 1;
+  for (let n=0; n < roots.length; n++) prod *= x - roots[n];
+  return prod;
+}
+
+let z = cd;
+let p = cd.map((v) => xi / v);
+z.push(0);
+
+let r0 = eval_poly(p,1) / eval_poly(z,1);
+let x = [];
+let y = [];
+for(let n = 0; n < 500; n++) {
+  let x_val = n /100;
+  x.push(x_val);
+  let y_val = Math.abs(r0 * eval_poly(z,x_val) / eval_poly(p, x_val));
+  y_val = Math.log10(y_val);
+  if (y_val>(0.7*N+2.2))y_val = Number.NaN;
+  if (y_val<-2)y_val = Number.NaN;
+  y.push(y_val);
+}
+plot(x, y);
+xlabel("x");
+ylabel("log<sub>10</sub>(|R|)");
+
+AW{"type":"mjmd"}
+Fourth order, $N=4$, selectivity factor, $\xi = 1.4$.
 
 AW{"type":"javascript"}
 // Plot fourth order rational function for xi = 1.4
@@ -67,6 +108,7 @@ for(let n = 0; n < 500; n++) {
 plot(x, y);
 xlabel("x");
 ylabel("log<sub>10</sub>(|R|)");
+
       
 		</textarea>
 		<script>
