@@ -45,6 +45,34 @@ plot(x,G);
 xlabel("&omega;/&omega;<sub>0</sub>")
 ylabel("G(&omega;)");
 
+Gstop = 1/Math.sqrt(1 + eps * eps * r.L * r.L);
+Gpass = 1/Math.sqrt(1 + eps * eps);
+console.log(`Stop-band ripple = ${-20 * Math.log10(Gstop)}`);
+console.log(`Pass-band ripple = ${-20 * Math.log10(Gpass)}`);
+
+AW{"type":"javascript"}
+let N = 5;
+let eps = 0.5088;  // Manually adjusted to get 1dB of pass-band ripple.
+let xi = 1.218699; // Manually adjusted for 40dB of stop-band ripple.
+
+let x = [];
+for (let n=0; n < 400; n++) {
+  let x_val = 3 * n / 400;
+  x.push(x_val);
+}
+
+let r = Ellip.R(N, xi, x);
+
+let G = r.R.map((r_val) => 1 / Math.sqrt(1 + eps * eps * r_val * r_val));
+plot(x,G);
+xlabel("ω/ω<sub>0</sub>")
+ylabel("G(ω)");
+
+Gstop = 1/Math.sqrt(1 + eps * eps * r.L * r.L);
+Gpass = 1/Math.sqrt(1 + eps * eps);
+console.log(`Stop-band ripple = ${-20 * Math.log10(Gstop)}`);
+console.log(`Pass-band ripple = ${-20 * Math.log10(Gpass)}`);
+console.log(`Zeros are ${r.p}`);
 		</textarea>
 		<script>
       new AwDocViewer( "serverless" );
