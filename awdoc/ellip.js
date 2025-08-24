@@ -119,8 +119,46 @@ define(['exports'], (function (exports) { 'use strict';
     return Rf(0, 1-m, 1);
   }
 
+  // ------ Elliptic rational function ------
+
+  function R(N, xi, x) {
+    let arr_x = [x];
+    if (x.constructor === Array) arr_x = x;
+
+    // Poles and zeros
+    let u = [];
+    let m = 1 / (xi * xi);
+    let Km = K(m);
+    let odd = N%2;
+    for (let n = 1; n <= (N-odd); n++) u.push(Km * (2 * n - 1) / N);
+    let scdp = Ellip.scdp(u, m);
+    let cd = scdp.map((o) => o.cn / o.dn);
+    let z = [...cd];
+    if (odd) z.push(0);
+    let p = cd.map((v) => xi / v);
+
+    function eval_poly(roots, x) {
+      let prod = 1;
+      for (let n = 0; n < roots.length; n++) prod *= x - roots[n];
+      return prod;
+    }
+
+    let r0 = eval_poly(p, 1) / eval_poly(z, 1);
+    let L = r0 * eval_poly(z, xi) / eval_poly(p, xi);
+
+    let arr_ret = [];
+    for (let n = 0; n < arr_x.length; n++) {
+      let x = arr_x[n];
+      arr_ret.push(r0 * eval_poly(z, x) / eval_poly(p, x));
+    }
+    arr_ret[0];
+    if (u.constructor === Array) ;
+    return {R: arr_ret, z, p, L};
+  }
+
   exports.F = F;
   exports.K = K;
+  exports.R = R;
   exports.am = am;
   exports.scdp = scdp;
 

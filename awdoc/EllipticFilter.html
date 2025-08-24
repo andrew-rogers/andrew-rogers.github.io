@@ -25,13 +25,26 @@ The gain of the filter given angular frequency, $\omega$, is
 
 $$ G_N(\omega) = \frac{1}{\sqrt{1+\epsilon^2 R_N^2(\xi,\omega/\omega_0)}} $$
 
+Frequency response of fourth order, $N=4$, elliptic filter with ripple factor, $\epsilon = 0.5$ and selectivity factor, $\xi = 1.05$.
 
 AW{"type":"javascript"}
-//  TODO: Plot Gain against omega
+let N = 4;
+let eps = 0.5;
+let xi = 1.05;
 
+let x = [];
+for (let n=0; n < 400; n++) {
+  let x_val = 3 * n / 400;
+  x.push(x_val);
+}
 
+let r = Ellip.R(N, xi, x);
 
-      
+let G = r.R.map((r_val) => 1 / Math.sqrt(1 + eps * eps * r_val * r_val));
+plot(x,G);
+xlabel("&omega;/&omega;<sub>0</sub>")
+ylabel("G(&omega;)");
+
 		</textarea>
 		<script>
       new AwDocViewer( "serverless" );
