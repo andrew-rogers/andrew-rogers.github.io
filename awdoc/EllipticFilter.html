@@ -73,6 +73,34 @@ Gpass = 1/Math.sqrt(1 + eps * eps);
 console.log(`Stop-band ripple = ${-20 * Math.log10(Gstop)}`);
 console.log(`Pass-band ripple = ${-20 * Math.log10(Gpass)}`);
 console.log(`Zeros are ${r.p}`);
+
+AW{"type":"mjmd"}
+
+The poles of the gain equation are the zeros of its denominator.
+
+$$ 1+\epsilon^2 R_N^2(\xi,\omega/\omega_0) = 0 $$
+
+It is usual practice to assume $ \omega_0 = 1 $ and to frequency scale the poles (and zeros) at a later stage. Prior to frequency scaling the filter is referred to as a prototype.
+
+For complex frequency, $ s = j\omega + \sigma $, $\omega$ is substituted as $\omega = -js$. These values and the definition of the elliptic rational function is then substituted into the denominator equation to give
+
+$$ 1+\epsilon^2 \mathrm{cd}^2 \left(N\frac{K\left(\frac{1}{L_N(\xi)}\right)}{K\left(\frac{1}{\xi}\right)}\mathrm{cd}^{-1}\left(-js,\frac{1}{\xi}\right), \frac{1}{L_N(\xi)}\right) = 0 $$
+
+Let
+
+$$ w = \mathrm{cd}^{-1}\left(-js,\frac{1}{\xi}\right) $$
+
+The denominator equation is then rewritten as
+
+$$ 1+\epsilon^2 \mathrm{cd}^2 \left(N\frac{K\left(\frac{1}{L_N(\xi)}\right)}{K\left(\frac{1}{\xi}\right)}w, \frac{1}{L_N(\xi)}\right) = 0 $$
+
+This is then re-arranged to solve for $w$
+
+$$ \mathrm{cd} \left(N\frac{K\left(\frac{1}{L_N(\xi)}\right)}{K\left(\frac{1}{\xi}\right)}w, \frac{1}{L_N(\xi)}\right) = \frac{\pm j}{\epsilon} $$
+
+$$ w = \frac{K\left(\frac{1}{\xi}\right)}{NK\left(\frac{1}{L_N(\xi)}\right)} \mathrm{cd}^{-1}\left(\frac{\pm j}{\epsilon}, \frac{1}{L_N(\xi)}\right) + \frac{nK}{N} $$
+
+The calculation of the poles requires the inverse cd function of a complex argument which will be addressed in the page on [Jacobi elliptic functions](Jacobi.html)
 		</textarea>
 		<script>
       new AwDocViewer( "serverless" );

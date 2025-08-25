@@ -29,6 +29,8 @@ $$ R_N(\xi, x) = r_0 x \frac{\prod\limits_{n=1}^{N-1}(x-x_n)}{\prod\limits_{n=1}
 
 $$ x_n = \mathrm{cd}\left(K(m)\frac{2n-1}{N}, m \right) \quad\text{and}\quad x_{pn} = \frac{\xi}{x_n} \quad\text{where}\quad m=\frac{1}{\xi^2} $$
 
+Please note that the above produces incorrect roots for N odd. This was not observed whilst plotting the functions for positive values of x, it became apparent when verifying the zeros of an [elliptic filter](EllipticFilter.html). This page will be updated in due course. The issue is resolved in the resulting [javascript library code](ellip.js).
+
 Fourth order, $N=3$, selectivity factor, $\xi = 1.4$.
 
 AW{"type":"javascript"}
