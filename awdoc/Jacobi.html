@@ -10,7 +10,7 @@
 AW{"type":"javascript", "hidden":"true"}
 let id = AndrewWIDE.suspend("Loading ellip.js");
 require(['ellip'], function (e) {
-  window.EL = e;
+  window.Ellip = e;
   AndrewWIDE.resume(id);
 });
 
@@ -260,6 +260,59 @@ let rf_arr_x = rf[0];
 let mu = rf_arr_x[rf_arr_x.length-1];
 let K = 1/Math.sqrt(mu);
 console.log(`K(${m}) = ${K}`);
+
+AW{"type":"mjmd"}
+Complex Arguments
+-----------------
+
+Taken from [Jacobian Elliptic Function Tables](https://www.dbraulibrary.org.in/RareBooks/Jacobian%20elliptic%20function%20tables.pdf), pg 21.
+
+For $z = x + iy$, let
+
+$$ m_1 = m - 1 $$
+$$ s_1 = \mathrm{sn}(x|m), \quad s_2 = \mathrm{sn}(y|m_1) $$
+$$ c_1 = \mathrm{cn}(x|m), \quad c_2 = \mathrm{cn}(y|m_1) $$
+$$ d_1 = \mathrm{dn}(x|m), \quad d_2 = \mathrm{dn}(y|m_1) $$
+
+gives
+
+$$ \mathrm{sn}(z|m) = \frac{s_1d_2+ic_1d_1s_2c_2}{c_2^2+ms_1^2s_2^2}$$
+$$ \mathrm{cn}(z|m) = \frac{c_1c_2-is_1d_1s_2d_2}{c_2^2+ms_1^2s_2^2}$$
+$$ \mathrm{dn}(z|m) = \frac{d_1c_2d_2-ims_1c_1s_2}{c_2^2+ms_1^2s_2^2}$$
+
+Other Jacobi elliptic functions can be derived from combinations of the above, for example let us derive $\mathrm{cd}(z|m)$
+
+$$ \begin{align}
+  \mathrm{cd}(z|m) &= \frac{\mathrm{cn}(z|m)}{\mathrm{dn}(z|m)} \\
+      &= \frac{\left(\frac{c_1c_2-is_1d_1s_2d_2}{c_2^2+ms_1^2s_2^2}\right)}{\left(\frac{d_1c_2d_2-ims_1c_1s_2}{c_2^2+ms_1^2s_2^2}\right)} \\
+      &= \frac{c_1c_2-is_1d_1s_2d_2}{d_1c_2d_2-ims_1c_1s_2}
+\end{align} $$
+
+Note that the denominators of the base functions cancel.
+
+AW{"type":"javascript"}
+let z = [0.1, 0.2] // 0.1 + i0.2
+let m = 0.4;
+
+window.Complex = window.Complex || {};
+Complex.div = function(a, b) {
+  let den = b[0] * b[0] + b[1] * b[1];
+  return [(a[0] * b[0] + a[1] * b[1]) / den, (a[1] * b[0] - a[0] * b[1]) / den];
+}
+
+function cd(z, m) {
+  let x = z[0]; // Real part
+  let y = z[1]; // Imaginary part
+  let scd1 = Ellip.scdp(x,m);
+  let scd2 = Ellip.scdp(y,m-1);
+  let nr = scd1.cn * scd2.cn;
+  let ni = scd1.sn * scd1.dn * scd2.sn * scd2.dn;
+  let dr = scd1.dn * scd2.cn * scd2.dn;
+  let di = m * scd1.sn * scd1.cn * scd2.sn;
+  return Complex.div([nr,ni],[dr,di]);
+}
+
+console.log(`cd(${z}, ${m}) = ${cd(z,m)}`);
       
 		</textarea>
 		<script>
