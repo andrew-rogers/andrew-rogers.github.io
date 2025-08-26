@@ -265,27 +265,22 @@ AW{"type":"mjmd"}
 Complex Arguments
 -----------------
 
-Taken from [Jacobian Elliptic Function Tables](https://www.dbraulibrary.org.in/RareBooks/Jacobian%20elliptic%20function%20tables.pdf), pg 21.
+Equations 57, 58, 59 from [Wolfram](https://mathworld.wolfram.com/JacobiEllipticFunctions.html) give the functions for complex arguments.
 
-For $z = x + iy$, let
+$$ D = 1 - \mathrm{dn}^2(u,k) \mathrm{sn}^2(v,k^\prime) $$
 
-$$ m_1 = m - 1 $$
-$$ s_1 = \mathrm{sn}(x|m), \quad s_2 = \mathrm{sn}(y|m_1) $$
-$$ c_1 = \mathrm{cn}(x|m), \quad c_2 = \mathrm{cn}(y|m_1) $$
-$$ d_1 = \mathrm{dn}(x|m), \quad d_2 = \mathrm{dn}(y|m_1) $$
+$$ \mathrm{sn}(u + iv, k) = \frac{\mathrm{sn}(u,k)\mathrm{cn}(v,k^\prime) + i \mathrm{cn}(u,k)\mathrm{dn}(u,k)\mathrm{sn}(v,k^\prime)\mathrm{cn}(v,k^\prime)}{D} $$
 
-gives
+$$ \mathrm{cn}(u + iv, k) = \frac{\mathrm{cn}(u,k)\mathrm{cn}(v,k^\prime) - i \mathrm{sn}(u,k)\mathrm{dn}(u,k)\mathrm{sn}(v,k^\prime)\mathrm{dn}(v,k^\prime)}{D} $$
 
-$$ \mathrm{sn}(z|m) = \frac{s_1d_2+ic_1d_1s_2c_2}{c_2^2+ms_1^2s_2^2}$$
-$$ \mathrm{cn}(z|m) = \frac{c_1c_2-is_1d_1s_2d_2}{c_2^2+ms_1^2s_2^2}$$
-$$ \mathrm{dn}(z|m) = \frac{d_1c_2d_2-ims_1c_1s_2}{c_2^2+ms_1^2s_2^2}$$
+$$ \mathrm{dn}(u + iv, k) = \frac{\mathrm{dn}(u,k)\mathrm{cn}(v,k^\prime)\mathrm{dn}(v,k^\prime) - i k^2 \mathrm{sn}(u,k)\mathrm{cn}(u,k)\mathrm{sn}(v,k^\prime)}{D} $$
 
-Other Jacobi elliptic functions can be derived from combinations of the above, for example let us derive $\mathrm{cd}(z|m)$
+Other Jacobi elliptic functions can be derived from combinations of the above, for example let us derive $\mathrm{cd}(z,k)$
 
 $$ \begin{align}
-  \mathrm{cd}(z|m) &= \frac{\mathrm{cn}(z|m)}{\mathrm{dn}(z|m)} \\
-      &= \frac{\left(\frac{c_1c_2-is_1d_1s_2d_2}{c_2^2+ms_1^2s_2^2}\right)}{\left(\frac{d_1c_2d_2-ims_1c_1s_2}{c_2^2+ms_1^2s_2^2}\right)} \\
-      &= \frac{c_1c_2-is_1d_1s_2d_2}{d_1c_2d_2-ims_1c_1s_2}
+  \mathrm{cd}(z,k) &= \frac{\mathrm{cn}(z,k)}{\mathrm{dn}(z,k)} \\
+      &= \frac{\left(\frac{\mathrm{cn}(u,k)\mathrm{cn}(v,k^\prime) - i \mathrm{sn}(u,k)\mathrm{dn}(u,k)\mathrm{sn}(v,k^\prime)\mathrm{dn}(v,k^\prime)}{D}\right)}{\left(\frac{\mathrm{dn}(u,k)\mathrm{cn}(v,k^\prime)\mathrm{dn}(v,k^\prime) - i k^2 \mathrm{sn}(u,k)\mathrm{cn}(u,k)\mathrm{sn}(v,k^\prime)}{D}\right)} \\
+      &= \frac{\mathrm{cn}(u,k)\mathrm{cn}(v,k^\prime) - i \mathrm{sn}(u,k)\mathrm{dn}(u,k)\mathrm{sn}(v,k^\prime)\mathrm{dn}(v,k^\prime)}{\mathrm{dn}(u,k)\mathrm{cn}(v,k^\prime)\mathrm{dn}(v,k^\prime) - i k^2 \mathrm{sn}(u,k)\mathrm{cn}(u,k)\mathrm{sn}(v,k^\prime)}
 \end{align} $$
 
 Note that the denominators of the base functions cancel.
@@ -304,15 +299,21 @@ function cd(z, m) {
   let x = z[0]; // Real part
   let y = z[1]; // Imaginary part
   let scd1 = Ellip.scdp(x,m);
-  let scd2 = Ellip.scdp(y,m-1);
+  let scd2 = Ellip.scdp(y,1-m);
   let nr = scd1.cn * scd2.cn;
-  let ni = scd1.sn * scd1.dn * scd2.sn * scd2.dn;
+  let ni = -scd1.sn * scd1.dn * scd2.sn * scd2.dn;
   let dr = scd1.dn * scd2.cn * scd2.dn;
-  let di = m * scd1.sn * scd1.cn * scd2.sn;
+  let di = -m * scd1.sn * scd1.cn * scd2.sn;
   return Complex.div([nr,ni],[dr,di]);
 }
 
+Ellip.cd_c = cd;
+
 console.log(`cd(${z}, ${m}) = ${cd(z,m)}`);
+
+AW{"type":"mjmd"}
+
+$$ \mathrm{sn}(z+K(m)|m) = \mathrm{cd}(z|m) $$
       
 		</textarea>
 		<script>
