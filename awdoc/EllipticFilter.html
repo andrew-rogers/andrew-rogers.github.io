@@ -72,7 +72,19 @@ Gstop = 1/Math.sqrt(1 + eps * eps * r.L * r.L);
 Gpass = 1/Math.sqrt(1 + eps * eps);
 console.log(`Stop-band ripple = ${-20 * Math.log10(Gstop)}`);
 console.log(`Pass-band ripple = ${-20 * Math.log10(Gpass)}`);
-console.log(`Zeros are ${r.p}`);
+
+let z = r.p;
+for (let n = 0; n < z.length; n++) {
+  z[n] = [0, z[n]]; // Zeros are on the imaginary axis.
+  console.log(`Zero ${n} > ${z[n][0]} ${z[n][1]}j`);
+}
+
+window.filt5 = {};
+filt5.N = N;
+filt5.eps = eps;
+filt5.xi = xi;
+filt5.L = r.L;
+filt5.z = z;
 
 AW{"type":"mjmd"}
 
@@ -98,9 +110,125 @@ This is then re-arranged to solve for $w$
 
 $$ \mathrm{cd} \left(N\frac{K\left(\frac{1}{L_N(\xi)}\right)}{K\left(\frac{1}{\xi}\right)}w, \frac{1}{L_N(\xi)}\right) = \frac{\pm j}{\epsilon} $$
 
-$$ w = \frac{K\left(\frac{1}{\xi}\right)}{NK\left(\frac{1}{L_N(\xi)}\right)} \mathrm{cd}^{-1}\left(\frac{\pm j}{\epsilon}, \frac{1}{L_N(\xi)}\right) + \frac{nK}{N} $$
+$$ w = \frac{K\left(\frac{1}{\xi}\right)}{NK\left(\frac{1}{L_N(\xi)}\right)} \mathrm{cd}^{-1}\left(\frac{\pm j}{\epsilon}, \frac{1}{L_N(\xi)}\right) + \frac{nK\left(\frac{1}{\xi}\right)}{N} $$
 
-The calculation of the poles requires the inverse cd function of a complex argument which will be addressed in the page on [Jacobi elliptic functions](Jacobi.html)
+The calculation of the poles requires the inverse cd function of a complex argument which will be addressed in the page on [Jacobi elliptic functions](Jacobi.html). For the above the argument is imaginary, i.e. the real part is zero. The result has a real part that is $K$ and an imaginary part that is dependent on the imaginary part of the argument. Thus only the imaginary part of the inverse cd function is used.
+
+$$ w_i = \Im\left(\frac{K\left(\frac{1}{\xi}\right)}{NK\left(\frac{1}{L_N(\xi)}\right)} \mathrm{cd}^{-1}\left(\frac{\pm j}{\epsilon}, \frac{1}{L_N(\xi)}\right)\right) $$
+
+Initially consider some specific values of complex argument, $z$, to manually find $\mathrm{cd}(z|m) = \frac{\pm j}{\epsilon}$
+
+AW{"type":"javascript"}
+window.Complex = window.Complex || {};
+Complex.div = function(a, b) {
+  let den = b[0] * b[0] + b[1] * b[1];
+  return [(a[0] * b[0] + a[1] * b[1]) / den, (a[1] * b[0] - a[0] * b[1]) / den];
+}
+
+function cd(z, m) {
+  let x = z[0]; // Real part
+  let y = z[1]; // Imaginary part
+  let scd1 = Ellip.scdp(x,m);
+  let scd2 = Ellip.scdp(y,1-m);
+  let nr = scd1.cn * scd2.cn;
+  let ni = -scd1.sn * scd1.dn * scd2.sn * scd2.dn;
+  let dr = scd1.dn * scd2.cn * scd2.dn;
+  let di = -m * scd1.sn * scd1.cn * scd2.sn;
+  return Complex.div([nr,ni],[dr,di]);
+}
+
+Ellip.cd_c = cd;
+console.log(`1 / eps = ${1 / filt5.eps}`);
+
+let ml = 1 / (filt5.L * filt5.L);
+let Kl = Ellip.K(ml);
+let z = [Kl, -1.43]; // Manually adjusted.
+console.log(`Manually: cd(z|m) = ${cd(z,ml)}`);
+
+let m = 1 / (filt5.xi * filt5.xi);
+let K = Ellip.K(m);
+let wi = -K * z[1] / (filt5.N * Kl);
+
+filt5.wi = wi;
+
+AW{"type":"mjmd"}
+The manual adjustment of the above converged reasonably with only a few attempts. The adjustment method is implemented below as a binary search.
+
+AW{"type":"javascript"}
+function find(func, ll, ul, y) {
+  let x = ll;
+  for (let n=0; n<100; n++) {
+    x = (ll + ul) / 2;
+    let val = func(x);
+    if (val>y) ul = x;
+    else ll = x;
+  }
+  return x;
+}
+
+function acdi(y, m) {
+  // Input assumed to be entirely imaginary with positive value < K.
+  let K = Ellip.K(m);
+  let im = -1.0 * find((v) => Ellip.cd_c([K, -v], m)[1], 0, K, y); // find() works for positive gradient, use -v as argument.
+  return im; // Only imaginary part of output is returned, real part is K.
+}
+
+let ml = 1 / (filt5.L * filt5.L);
+let Kl = Ellip.K(ml);
+let z = [Kl, acdi(1/filt5.eps, ml)]; // Binary searched.
+console.log(`Binary searched: cd(z|m) = ${Ellip.cd_c(z,ml)}`);
+
+let m = 1 / (filt5.xi * filt5.xi);
+let K = Ellip.K(m);
+let wi = - K * z[1] / (filt5.N * Kl);
+
+filt5.wi = wi;
+
+AW{"type":"mjmd"}
+
+$$ s_{pn} = j \mathrm{cd}\left(K\left(\frac{1}{\xi}\right)\frac{2n + 1}{N} + jw_i, \frac{1}{\xi}\right) \quad n = 0,1\dots N-1 $$
+
+AW{"type":"javascript"}
+let N = filt5.N;
+let m = 1 / (filt5.xi * filt5.xi);
+let K = Ellip.K(m);
+
+let w = [];
+for (let n = 0; n < N; n++) w.push([(n * 2 + 1) * K / N, filt5.wi]);
+
+let p = w.map((w_val) => Ellip.cd_c(w_val, m));
+
+for (let n = 0; n < p.length; n++) {
+  p[n] = [p[n][1], p[n][0]]; // Swap real and imaginary
+  console.log(`Pole ${n} > ${p[n][0]} ${p[n][1]}j`);
+}
+
+filt5.p = p;
+
+AW{"type":"javascript"}
+Complex.multiply = function (a,b) {
+  return [a[0] * b[0] - a[1] * b[1], a[0] * b[1] + a[1] * b[0]];
+}
+
+function eval_poly(roots, x) {
+  let prod = [1,0];
+  for (let n = 0; n < roots.length; n ++) prod = Complex.multiply(prod, [x[0] - roots[n][0], x[1] - roots[n][1]]);
+  return prod;
+}
+
+let w = [];
+let h = [];
+for (let w_val = 0; w_val < 5; w_val += 0.01) {
+  w.push(w_val);
+  let x = [0, w_val];
+  let y_val = Complex.div(eval_poly(filt5.z, x), eval_poly(filt5.p, x));
+  h.push(20 * Math.log10(Math.sqrt(y_val[0] * y_val[0] + y_val[1] * y_val[1])));
+}
+
+plot(w, h);
+xlabel("&omega;");
+ylabel("H(j&omega;) (dB)");
+
 		</textarea>
 		<script>
       new AwDocViewer( "serverless" );
