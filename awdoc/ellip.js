@@ -46,6 +46,92 @@ define(['exports'], (function (exports) { 'use strict';
     return [arr_a, arr_b, arr_c];
   }
 
+  class Ellip {
+
+    constructor(m) {
+      this.m = m;
+      this.m1 = 1-m;
+
+      let a = 1.0;
+      let b = Math.sqrt(1.0 - m); // DLMF uses k, k' whereas the tables use m and 1-m. m=k^2
+      let c = Math.sqrt(m);
+      this.agm = this.#agm(a, b, c);
+      this.agm1 = this.#agm(a, c, b); // AGM sequence for complementary paramater.
+    }
+
+    am(u) {
+      return this.#am(u, this.agm);
+    }
+
+    am1(u) {
+      // Amplitude function of u for complementary parameter.
+      return this.#am(u, this.agm1);
+    }
+
+    cd_c([u, v]) {
+      // Derived from Equations 58 & 59 in https://mathworld.wolfram.com/JacobiEllipticFunctions.html
+      let scd1 = this.scdp(u);
+      let scd2 = this.scdp1(v);
+      let nr = scd1.cn * scd2.cn;
+      let ni = -scd1.sn * scd1.dn * scd2.sn * scd2.dn;
+      let dr = scd1.dn * scd2.cn * scd2.dn;
+      let di = -m * scd1.sn * scd1.cn * scd2.sn;
+      return this.#div_c([nr,ni],[dr,di]);
+    }
+
+    scdp(u) {
+      let phi = this.am(u);
+      let s = Math.sin(phi);
+      let c = Math.cos(phi);
+      let d = Math.sqrt(1 - this.m * s * s); // DLMF 22.20.5
+      return {sn: s, cn: c, dn: d, phi: phi};
+    }
+
+    scdp1(u) {
+      let phi = this.am1(u);
+      let s = Math.sin(phi);
+      let c = Math.cos(phi);
+      let d = Math.sqrt(1 - this.m1 * s * s);
+      return {sn: s, cn: c, dn: d, phi: phi};
+    }
+
+    #agm(a,b,c) {
+      let arr_a = [];
+      let arr_b = [];
+      let arr_c = [];
+      for (let n = 0; n < 20; n++) {
+        arr_a.push(a);
+        arr_b.push(b);
+        arr_c.push(c);
+        if (Math.abs(c/a) < Number.EPSILON) break;
+
+        let ta = a;
+        let tb = b;
+        a = (ta + tb) * 0.5;
+        b = Math.sqrt(ta * tb);
+        c = (ta - tb) * 0.5;
+      }
+      return [arr_a, arr_b, arr_c];
+    }
+
+    #am(u,agm) {
+      let [a, b, c] = agm;
+
+      let N = a.length - 1;
+      let phi = (2.0 ** N) * a[N] * u;
+      for (let n = N; n > 0; n--) {
+        let x = c[n] * Math.sin(phi) / a[n];
+        phi = (Math.asin(x) + phi) * 0.5;
+      }
+      return phi;
+    }
+
+    #div_c(a, b) {
+      let den = b[0] * b[0] + b[1] * b[1];
+      return [(a[0] * b[0] + a[1] * b[1]) / den, (a[1] * b[0] - a[0] * b[1]) / den];
+    }
+
+  }
   function am(u,m) {
     let a = 1.0;
     let b = Math.sqrt(1.0 - m); // DLMF uses k, k' whereas the tables use m and 1-m. m=k^2
@@ -134,8 +220,8 @@ define(['exports'], (function (exports) { 'use strict';
       let d = 2 * n - 1;
       if (d != N) u.push(Km * d / N);
     }
-    let scdp = Ellip.scdp(u, m);
-    let cd = scdp.map((o) => o.cn / o.dn);
+    let scdp_vals = scdp(u, m);
+    let cd = scdp_vals.map((o) => o.cn / o.dn);
     let z = [...cd];
     if (odd) z.push(0);
     let p = cd.map((v) => xi / v);
@@ -159,6 +245,7 @@ define(['exports'], (function (exports) { 'use strict';
     return {R: arr_ret, z, p, L};
   }
 
+  exports.Ellip = Ellip;
   exports.F = F;
   exports.K = K;
   exports.R = R;

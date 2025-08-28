@@ -112,7 +112,7 @@ $$ \mathrm{cd} \left(N\frac{K\left(\frac{1}{L_N(\xi)}\right)}{K\left(\frac{1}{\x
 
 $$ w = \frac{K\left(\frac{1}{\xi}\right)}{NK\left(\frac{1}{L_N(\xi)}\right)} \mathrm{cd}^{-1}\left(\frac{\pm j}{\epsilon}, \frac{1}{L_N(\xi)}\right) + \frac{nK\left(\frac{1}{\xi}\right)}{N} $$
 
-The calculation of the poles requires the inverse cd function of a complex argument which will be addressed in the page on [Jacobi elliptic functions](Jacobi.html). For the above the argument is imaginary, i.e. the real part is zero. The result has a real part that is $K$ and an imaginary part that is dependent on the imaginary part of the argument. Thus only the imaginary part of the inverse cd function is used.
+The calculation of the poles requires the inverse cd function of a complex argument which will be addressed in the page on [Inverse cd of imaginary values](Jacobi_acdi.html). For the above the argument is imaginary, i.e. the real part is zero. The result has a real part that is $K$ and an imaginary part that is dependent on the imaginary part of the argument. Thus only the imaginary part of the inverse cd function is used.
 
 $$ w_i = \Im\left(\frac{K\left(\frac{1}{\xi}\right)}{NK\left(\frac{1}{L_N(\xi)}\right)} \mathrm{cd}^{-1}\left(\frac{\pm j}{\epsilon}, \frac{1}{L_N(\xi)}\right)\right) $$
 
@@ -149,7 +149,7 @@ let m = 1 / (filt5.xi * filt5.xi);
 let K = Ellip.K(m);
 let wi = -K * z[1] / (filt5.N * Kl);
 
-filt5.wi = wi;
+filt5.wi_man = wi;
 
 AW{"type":"mjmd"}
 The manual adjustment of the above converged reasonably with only a few attempts. The adjustment method is implemented below as a binary search.
@@ -182,7 +182,29 @@ let m = 1 / (filt5.xi * filt5.xi);
 let K = Ellip.K(m);
 let wi = - K * z[1] / (filt5.N * Kl);
 
-filt5.wi = wi;
+filt5.wi_bs = wi;
+
+AW{"type":"mjmd"}
+
+The page [Inverse cd of imaginary values](Jacobi_acdi.html) gives
+
+$$\begin{align}
+  \mathrm{cd}^{-1}(iy|m) &= K(m) + iv \\
+                         &= K(m) + i\mathrm{sc}^{-1}(-y|1-m)
+\end{align} $$
+
+which can be used to solve
+
+$$ w_i = \Im\left(\frac{K\left(\frac{1}{\xi}\right)}{NK\left(\frac{1}{L_N(\xi)}\right)} \mathrm{cd}^{-1}\left(\frac{\pm j}{\epsilon}, \frac{1}{L_N(\xi)}\right)\right) $$
+
+AW{"type":"javascript"}
+let ml = 1 / (filt5.L * filt5.L);
+let Kl = Ellip.K(ml);
+let z = [Kl, Ellip.F(Math.atan(-1/filt5.eps), 1-ml)]; // Using elliptic integral, F(arctan(-y) | 1-m).
+
+let m = 1 / (filt5.xi * filt5.xi);
+let K = Ellip.K(m);
+filt5.wi = - K * z[1] / (filt5.N * Kl);
 
 AW{"type":"mjmd"}
 
