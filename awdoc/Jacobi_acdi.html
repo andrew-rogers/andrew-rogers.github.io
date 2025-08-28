@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" charset="UTF-8">
+    <script src="AndrewWIDE.js"></script>
+	</head>
+	<body>
+		<textarea id="aw_json" class="awjson" hidden>
+
+AW{"type":"javascript", "hidden":"true"}
+let id = AndrewWIDE.suspend("Loading ellip.js");
+require(['ellip'], function (e) {
+  window.Ellip = e;
+  AndrewWIDE.resume(id);
+});
+
+AW{"type":"mjmd"}
+
+The Inverse of Jacobi Elliptic Function cd for Imaginary Argument.
+====================================================================
+
+The design of [elliptic filters](EllipticFilter.html) requires the inverse cd function of an imaginary value. First consider the complex cn function
+
+$$ \begin{align}
+  \mathrm{cd}(u + iv|m) &= x + iy \\
+  \mathrm{cd}^{-1}(x + iy|m) &= u + iv
+\end{align} $$
+
+The inverse is to find $u + iv$ for a given $x + iy$. When $x + iy$ is entirely imaginary then $x = 0$.
+
+Given that cd gives a real result, $x$, for a real argument, $u$, and that the real part of the result is required to be zero, $x = 0$, $u$ can be found.
+
+$$ \begin{align}
+  \mathrm{cd}(u|m) &= 0 \\
+  u &= K(m)
+\end{align} $$
+
+Then $u$ is fixed at K(m), the complete elliptic integral of parameter $m$.
+
+$$ \mathrm{cd}(K(m) + iv|m) = iy $$
+
+From [DLMF table 22.4.3](https://dlmf.nist.gov/22.4)
+
+$$ \mathrm{cd}(K(m) + iv | m) = -\mathrm{sn}(iv|m) $$
+
+This leads to the simpler expression where $K(m)$ is now removed
+
+$$ -\mathrm{sn}(iv|m) = iy $$
+
+Jacobi's Imaginary Transformation [DLMF table 22.6.1](https://dlmf.nist.gov/22.6)
+      
+$$ \mathrm{sn}(iv|m) = i\mathrm{sc}(v|1-m) $$
+
+Thus
+
+$$\begin{align}
+                      iy &= -i\mathrm{sc}(v|1-m) \\
+                      -y &= \mathrm{sc}(v|1-m) \\
+  \mathrm{sc}^{-1}(-y|m-1) &= v    
+\end{align} $$
+
+Thus the problem of finding the inverse cd of an imaginary value is simplified to
+
+$$\begin{align}
+  \mathrm{cd}^{-1}(iy|m) &= K(m) + iv \\
+                         &= K(m) + i\mathrm{sc}^{-1}(-y|1-m)
+\end{align} $$
+
+AW{"type":"javascript"}
+
+function asc(x, m) {
+  return Ellip.F(Math.atan(x), m);
+}
+
+Ellip.acd_i = function (y, m) {
+  // Calculates u + iv = arccd(iy | m). u is not returned as it is always K(m).
+  return asc(-y,1-m);
+}
+
+AW{"type":"mjmd"}
+Define a complex cd function to test the **acd_i** function.
+
+AW{"type":"javascript"}
+window.Complex = window.Complex || {};
+Complex.div = function(a, b) {
+  let den = b[0] * b[0] + b[1] * b[1];
+  return [(a[0] * b[0] + a[1] * b[1]) / den, (a[1] * b[0] - a[0] * b[1]) / den];
+}
+
+function cd(z, m) {
+  let x = z[0]; // Real part
+  let y = z[1]; // Imaginary part
+  let scd1 = Ellip.scdp(x,m);
+  let scd2 = Ellip.scdp(y,1-m);
+  let nr = scd1.cn * scd2.cn;
+  let ni = -scd1.sn * scd1.dn * scd2.sn * scd2.dn;
+  let dr = scd1.dn * scd2.cn * scd2.dn;
+  let di = -m * scd1.sn * scd1.cn * scd2.sn;
+  return Complex.div([nr,ni],[dr,di]);
+}
+
+Ellip.cd_c = cd;
+
+AW{"type":"mjmd"}
+Plot both the complex cd function and the **acd_i** for comparison.
+
+AW{"type":"javascript"}
+
+let x = [];
+let y = [];
+let x1 = [];
+let m = 0.8;
+let K = Ellip.K(m);
+let Kp = Ellip.K(1-m);
+for (let v = 0; v < 0.95 * Kp; v += 0.05) {
+  let y_val = Ellip.cd_c([K,-v], m)[1];    // Imaginary part cd(K - iv | m) on y_axis
+  let v1_val = -Ellip.acd_i(y_val, m); // Inverse cd on x-axis
+  x.push(v);
+  y.push(y_val);
+  x1.push(v1_val);
+}
+plot(x,y).name("&image;cd(K - iv | m)");
+plot(x1,y).marker('x').name("-&image;arccd(iy | m) with axes swapped.");
+ylabel("&image;cd(K - iv | m)");
+xlabel("v");
+		</textarea>
+		<script>
+      new AwDocViewer( "serverless" );
+		</script>
+	</body>
+</html>
