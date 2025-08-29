@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" charset="UTF-8">
+    <script src="AndrewWIDE.js"></script>
+	</head>
+	<body>
+		<textarea id="aw_json" class="awjson" hidden>
+
+AW{"type":"javascript", "hidden":"true"}
+let id = AndrewWIDE.suspend("Loading ellip.js");
+require(['ellip','signal'], function (e,s) {
+  window.Ellip = e;
+  window.signal = s;
+  AndrewWIDE.resume(id);
+});
+
+AW{"type":"mjmd"}
+
+
+AW{"type":"javascript"}
+
+let [z,p,k] = signal.ellip(5,1,40,2);
+
+window.Complex = {};
+
+Complex.multiply = function (a,b) {
+  return [a[0] * b[0] - a[1] * b[1], a[0] * b[1] + a[1] * b[0]];
+}
+
+Complex.div = function(a, b) {
+  let den = b[0] * b[0] + b[1] * b[1];
+  return [(a[0] * b[0] + a[1] * b[1]) / den, (a[1] * b[0] - a[0] * b[1]) / den];
+}
+
+function eval_poly(roots, x) {
+  let prod = [1,0];
+  for (let n = 0; n < roots.length; n ++) prod = Complex.multiply(prod, [x[0] - roots[n][0], x[1] - roots[n][1]]);
+  return prod;
+}
+
+let w = [];
+let h = [];
+for (let w_val = 0; w_val < 5; w_val += 0.01) {
+  w.push(w_val);
+  let x = [0, w_val];
+  let y_val = Complex.div(eval_poly(z, x), eval_poly(p, x));
+  h.push(20 * Math.log10(Math.sqrt(y_val[0] * y_val[0] + y_val[1] * y_val[1])));
+}
+
+plot(w, h);
+xlabel("&omega;");
+ylabel("H(j&omega;) (dB)");
+
+		</textarea>
+		<script>
+      new AwDocViewer( "serverless" );
+		</script>
+	</body>
+</html>
