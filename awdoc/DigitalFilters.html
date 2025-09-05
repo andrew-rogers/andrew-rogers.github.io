@@ -8,49 +8,96 @@
 		<textarea id="aw_json" class="awjson" hidden>
 
 AW{"type":"javascript", "hidden":"true"}
-let id = AndrewWIDE.suspend("Loading ellip.js");
-require(['ellip','signal'], function (e,s) {
-  window.Ellip = e;
-  window.signal = s;
-  AndrewWIDE.resume(id);
-});
+AndrewWIDE.loadWasmDSPModules(['signal']);
 
 AW{"type":"mjmd"}
 
+Design Notes for the WasmDSP Filter Functions
+=============================================
+
+Frequency Scaling
+-----------------
+
+The single pole analogue prototype filter has the transfer function
+
+$$ H(s) = \frac{1}{s+1} $$
+
+The DC gain is found by letting $s=0$
+
+$$ H(0) = \frac{1}{1} = 1 $$
+
+Frequency scaling by $\omega_0$ gives the transfer function
+
+$$ H(s) = \frac{1}{s+\omega_c} $$
+
+and its DC gain is
+
+$$ H(0) = \frac{1}{\omega_c} $$
+
+The gain compensation factor for the scaled first order Butterworth filter is therefore $k = \omega_c $. For a second order filter the gain compesation factor would be $k = \omega_c^2$. Genrally speaking the scaled lowpass filter with $N$ fewer zeros than poles has a gain compensation factor of
+
+$$ k = \omega_c^N $$
+
+Bilinear Z-transform
+--------------------
+
+Consider an analogue filter with one zero and one pole
+
+$$ H_a(s) = \frac{s-s_z}{s-s_p} $$
+
+The DC gain is
+
+$$ H_a(0) = \frac{-s_z}{-s_p} $$
+
+Obtain the digital filter by applying the BZT to the roots
+
+$$ H_d(z) = \frac{z-\frac{2+s_z}{2-s_z}}{z-\frac{2+s_p}{2-s_p}} $$
+
+Let $z=1$ to obtain DC gain
+
+$$\begin{align}
+      H_d(1) &= \frac{1-\frac{2+s_z}{2-s_z}}{1-\frac{2+s_p}{2-s_p}} \\
+           &= \frac{(2-s_z)(2-s_p)-(2-s_p)(2+s_z)}{(2-s_z)(2-s_p)-(2-s_z)(2+s_p)} \\
+           &= \frac{2-s_p}{2-s_z}\times\frac{(2-s_z)-(2+s_z)}{(2-s_p)-(2+s_p)} \\
+           &= \frac{2-s_p}{2-s_z}\times\frac{-2s_z}{-2s_p} \\
+           &= \frac{2-s_p}{2-s_z}\times H_a(0)
+\end{align}$$
+
+The gain compensation factor for the first order filter is therefore
+
+$$ k = \frac{2-s_z}{2-s_p} $$
+
+This can be generalised for higher degree filters
+
+$$ k = \frac{\prod(2-s_{z,n})}{\prod(2-s_{p,n})} $$
+
+Examples from the WasmDSP Signal Processing Module
+==================================================
+
+A function to plot the frequency response is defined
 
 AW{"type":"javascript"}
+window.signal = AndrewWIDE.WasmDSP.modules.signal;
 
-let [z,p,k] = signal.ellip(5,1,40,2);
-
-window.Complex = {};
-
-Complex.multiply = function (a,b) {
-  return [a[0] * b[0] - a[1] * b[1], a[0] * b[1] + a[1] * b[0]];
+window.sosfreqz = function(sos) {
+  let [h,w] = signal.sosfreqz(sos);
+  hmag = h.map((v) => 20 * Math.log10(Math.sqrt(v[0] * v[0] + v[1] * v[1])));
+  plot(w, hmag);
+  xlabel("&omega;");
+  ylabel("|H(z)| (dB)");
 }
 
-Complex.div = function(a, b) {
-  let den = b[0] * b[0] + b[1] * b[1];
-  return [(a[0] * b[0] + a[1] * b[1]) / den, (a[1] * b[0] - a[0] * b[1]) / den];
-}
+AW{"type":"javascript"}
+let sos = signal.butter(4,0.1);
+sosfreqz(sos);
 
-function eval_poly(roots, x) {
-  let prod = [1,0];
-  for (let n = 0; n < roots.length; n ++) prod = Complex.multiply(prod, [x[0] - roots[n][0], x[1] - roots[n][1]]);
-  return prod;
-}
+AW{"type":"javascript"}
+let sos = signal.ellip(5,1,40,0.1);
+sosfreqz(sos);
 
-let w = [];
-let h = [];
-for (let w_val = 0; w_val < 5; w_val += 0.01) {
-  w.push(w_val);
-  let x = [0, w_val];
-  let y_val = Complex.div(eval_poly(z, x), eval_poly(p, x));
-  h.push(20 * Math.log10(Math.sqrt(y_val[0] * y_val[0] + y_val[1] * y_val[1])));
-}
-
-plot(w, h);
-xlabel("&omega;");
-ylabel("H(j&omega;) (dB)");
+AW{"type":"javascript"}
+let sos = signal.ellip(5,1,40,0.1,'hp');
+sosfreqz(sos);
 
 		</textarea>
 		<script>

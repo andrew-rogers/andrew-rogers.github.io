@@ -385,9 +385,12 @@
   };
 
   PrintGenerator.prototype.generate = function() {
-      let s = {"div": ces.div};
-      s.obj = {"type": "print", "str": this.str};
-      ces.outputs.push(s);
+      let ta = document.createElement('textarea');
+      ta.value = this.str;
+      ta.style.width = '100%';
+      ta.readOnly = true;
+      ces.div.appendChild(ta);
+      ta.style.height = ta.scrollHeight + 3 + "px";
       PrintGenerator.m_current = null;
   };
 
@@ -553,7 +556,8 @@
       obj.filename = file.name;
       obj.content = event.target.result;
       obj.buffer = event.target.result;
-      ta.value = obj.content;
+      if (obj.buffer.length <= 65536) ta.value = obj.content;
+      else ta.value = 'File too large to display.';
     };
     if (file.name.endsWith('.bin')) {
       reader.readAsArrayBuffer(file);
@@ -937,8 +941,6 @@
 
       // Layout
       this.#layout();
-
-      
     }
 
     createDiv() {

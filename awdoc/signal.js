@@ -1,23 +1,4 @@
-define(['exports', 'mathjs'], (function (exports, math) { 'use strict';
-
-    function _interopNamespaceDefault(e) {
-        var n = Object.create(null);
-        if (e) {
-            Object.keys(e).forEach(function (k) {
-                if (k !== 'default') {
-                    var d = Object.getOwnPropertyDescriptor(e, k);
-                    Object.defineProperty(n, k, d.get ? d : {
-                        enumerable: true,
-                        get: function () { return e[k]; }
-                    });
-                }
-            });
-        }
-        n.default = e;
-        return Object.freeze(n);
-    }
-
-    var math__namespace = /*#__PURE__*/_interopNamespaceDefault(math);
+define(['exports'], (function (exports) { 'use strict';
 
     const b64 = `
 AGFzbQEAAAABpwEZYAF/AX9gA39/fwBgAX8AYAN/f38Bf2AAAGAFf39/f38Bf2ACf38Bf2ACf38A
@@ -627,66 +608,6 @@ NTY3ODlBQkNERUYAQZAkCwEFAEGcJAsBBABBtCQLCgUAAAAGAAAAaBMAQcwkCwECAEHcJAsI////
         }
     }
 
-    function root2quad(x) {
-      // Convert a complex root and its conjugate to a quadratic with real coefficients.
-      return [1, -2*x.re, x.re*x.re + x.im*x.im];
-    }
-
-    function buttap(N) {
-      // Prototype analogue Butterworth low pass filter has poles on a unit circle.
-      const j = math__namespace.complex(0,1);
-      let p=[];
-      for (let n=0; n<N; n++) {
-        const angle = ((n + 0.5) / N + 0.5) * Math.PI;
-        p.push(math__namespace.exp(math__namespace.multiply(j,angle)));
-      }
-      if (N%2==1) p[(N-1)/2] = math__namespace.complex(-1,0);
-
-      return [[], p, 1];
-    }
-
-    function butter(N, wo, type) {
-      let [z,p,k] = butter_zpk(N, wo, type);
-      const odd = N%2;
-      let Np = (N-odd) / 2;
-      let sos = [];
-      for (let n=0; n<Np; n++) {
-        sos.push([...root2quad(z[n]), ...root2quad(p[n])]);
-      }
-      if(odd) sos.push([1, -z[Np].re, 0, 1, -p[Np].re, 0]);
-      return sos;
-    }
-
-    function butter_zpk(N, wo, type) {
-      type = type || 'lp';
-      let [z, p, k] = buttap(N);
-
-      // Pre-warp frequencies
-      wo = math__namespace.multiply(2.0, math__namespace.tan(math__namespace.multiply(math__namespace.multiply(math__namespace.pi, wo), 0.5)));
-
-      // Scale zeros and poles
-      if (type=='lp') {
-        z = math__namespace.multiply(wo, z);
-        p = math__namespace.multiply(wo, p);
-      } else {
-        z = math__namespace.dotDivide(wo, z);
-        p = math__namespace.dotDivide(wo, p);
-      }
-
-      // BZT
-      z = math__namespace.dotDivide(math__namespace.add(2.0, z), math__namespace.subtract(2.0, z));
-      p = math__namespace.dotDivide(math__namespace.add(2.0, p), math__namespace.subtract(2.0, p));
-
-      // Add the missing zeros.
-      if (type=='lp') {
-        while(z.length < N) z.push(math__namespace.complex(-1,0));
-      } else {
-        while(z.length < N) z.push(math__namespace.complex(1,0));
-      }
-
-      return [z, p, k];
-    }
-
     /**
      *
      * @licstart  The following is the entire license notice for the 
@@ -960,30 +881,48 @@ NTY3ODlBQkNERUYAQZAkCwEFAEGcJAsBBABBtCQLCgUAAAAGAAAAaBMAQcwkCwECAEHcJAsI////
      */
 
 
-    function ellip(N, rp, rs, fc, bt, options) {
-      // TODO: Check band
-      // TODO: Check options, {analogue: false, zpk: true} etc.
-      // TODO: Pre-warp
+    function butter(N, fc, bt, options) {
+      let opt = checkOptions(options);
 
       // Prototype
-      let [z, p, k] = ellipap(N);
+      let [z, p, k] = buttap(N);
 
       // Frequency scale
-      [z, p, k] = frequencyScale(z, p, k, fc, bt);
+      return frequencyScale(z, p, k, fc, bt, opt);
+    }
 
-      // TODO: BZT
+    function buttap(N) {
+      // Prototype analogue Butterworth low pass filter has poles on a unit circle.
+      let p=[];
+      for (let n=0; n<N; n++) {
+        const angle = ((n + 0.5) / N + 0.5) * Math.PI;
+        p.push([Math.cos(angle), Math.sin(angle)]);
+      }
+      if (N%2==1) p[(N-1)/2] = [-1, 0];
 
-      return [z, p, k];
+      return [[], p, 1];
+    }
+
+    function ellip(N, rp, rs, fc, bt, options) {
+      let opt = checkOptions(options);
+
+      // Prototype
+      let [z, p, k] = ellipap(N, rp, rs);
+
+      // Frequency scale
+      return frequencyScale(z, p, k, fc, bt, opt);
     }
 
     function ellipap(N, rp, rs) {
       // Prototype analogue Elliptic low pass filter.
 
-      let eps = 0.5088;  // TODO: calc from riiple spec.
-      let xi = 1.218699; // TODO: calc from riiple spec.
+      rp = 10 ** (-rp / 20);
+      rs = 10 ** (-rs / 20);
+      let eps = Math.sqrt(1 / (rp * rp) - 1);
+      let Lt  = Math.sqrt(1 / (rs * rs) - 1) / eps;
 
       // Zeros are the poles of the ellitic rational function mapped to the imaginary axis.
-      let r = R(N, xi, [0]);
+      let [r,xi] = findR(N, Lt);
       let z = r.p.map((v) => [0, v]);
 
       // Poles are from the zeros of the elliptic rational function with its argument being the complex frequency s = jw.
@@ -1001,7 +940,41 @@ NTY3ODlBQkNERUYAQZAkCwEFAEGcJAsBBABBtCQLCgUAAAAGAAAAaBMAQcwkCwECAEHcJAsI////
       let p = w.map((w_val) => el.cd_c(w_val));
       p = p.map((v) => [v[1], v[0]]); // Swap real and imaginary.
 
-      return [z, p, 1];
+      // Compute gain at jw = 0
+      let hz = 1;
+      let hp = rp;
+      if (N%2) hp = 1;
+      z.forEach((v) => hz = hz * Math.sqrt(v[0]*v[0] + v[1]*v[1]));
+      p.forEach((v) => hp = hp * Math.sqrt(v[0]*v[0] + v[1]*v[1]));
+
+      return [z, p, hp / hz];
+    }
+
+    function bzt(z, p, k) {
+
+      // Gain change compensation.
+      let kz = [1, 0];
+      z.forEach((v) => kz = complexMult$1(kz,[2 - v[0], -v[1]]));
+      let kp = [1, 0];
+      p.forEach((v) => kp = complexMult$1(kp,[2 - v[0], -v[1]]));
+      k = k * complexDiv$1(kz, kp)[0];
+
+      // Bilinear Z-transform
+      function f(a) {
+        return complexDiv$1([2 + a[0], a[1]], [2 - a[0], -a[1]])
+      }
+      z = z.map(f);
+      p = p.map(f);
+      while (z.length < p.length) z.push([-1,0]); // Move zeros at infinity to -1
+
+      return [z, p, k];
+    }
+
+    function checkOptions(options) {
+      let opt = options || {};
+      if (!opt.hasOwnProperty('digital')) opt.digital = true;
+      if (!opt.hasOwnProperty('sos')) opt.sos = true;
+      return opt;
     }
 
     function complexDiv$1(num, den) {
@@ -1020,7 +993,36 @@ NTY3ODlBQkNERUYAQZAkCwEFAEGcJAsBBABBtCQLCgUAAAAGAAAAaBMAQcwkCwECAEHcJAsI////
       return [scale*r, scale*i];
     }
 
-    function frequencyScale(z, p, k, fc, bt) {
+    function complexMult$1(a, b) {
+      return [a[0]*b[0] - a[1]*b[1], a[0]*b[1] + a[1]*b[0]];
+    }
+
+    function findR(N, L) {
+      let xi_min = 1 + Number.EPSILON;
+      let xi = xi_min;
+
+      // Double xi until past target.
+      for (let n = 0; n < 10; n++) {
+        let r = R(N, xi, [0]);
+        if (r.L >= L) break;
+        xi = xi * 2;
+      }
+
+      // Binary search.
+      let ll = xi / 2;
+      if (ll < xi_min) ll = xi_min;
+      let ul = xi;
+      let r = {};
+      for (let n = 0; n < 60; n++) {
+        r = R(N, xi, [0]);
+        if(r.L < L) ll = xi;
+        else ul = xi;
+        xi = (ll + ul) / 2;
+      }
+      return [r, xi];
+    }
+
+    function frequencyScale(z, p, k, fc, bt, opt) {
       bt = bt || 'L'; // Default to lowpass.
 
       // find first occurance of L,H,P or S
@@ -1028,6 +1030,8 @@ NTY3ODlBQkNERUYAQZAkCwEFAEGcJAsBBABBtCQLCgUAAAAGAAAAaBMAQcwkCwECAEHcJAsI////
       bt = bt.toUpperCase().match(/[LHPS]/g);
       if (bt.length == 0) bt = 'L';
       else bt = bt[0];
+
+      if (opt.digital) fc = preWarp(fc); // TODO: handle two frequencies for bandpas / bandstop
 
       // Scale zeros and poles
       if (bt == 'H') { // TODO: 'P' and 'S'
@@ -1038,9 +1042,80 @@ NTY3ODlBQkNERUYAQZAkCwEFAEGcJAsBBABBtCQLCgUAAAAGAAAAaBMAQcwkCwECAEHcJAsI////
         // Lowpass default.
         z = z.map((v) => [fc * v[0], fc * v[1]]);
         p = p.map((v) => [fc * v[0], fc * v[1]]);
+        k = k * (fc ** (p.length - z.length));
       }
 
+      if (opt.digital) [z, p, k] = bzt(z, p, k);
+
+      if (opt.sos) return zpk2sos(z, p, k);
       return [z, p, k];
+    }
+
+    function preWarp(f) {
+      return 2 * Math.tan(Math.PI * f * 0.5);
+    }
+
+    function sort(r) {
+      // If odd number of roots put real root last.
+      if ((r.length % 2) == 0) return r
+
+      // Find root with smallest absolute imaginary.
+      let min = Math.abs(r[0][1]);
+      let im = 0;
+      for (let n = 0; n < r.length; n++) {
+        let val = Math.abs(r[n][1]);
+        if (val < min) {
+          min = val;
+          im = n;
+        }
+      }
+
+      let ret = [];
+      for (let n = 0; n < r.length; n++) {
+        if (n != im) ret.push(r[n]);
+      }
+      ret.push(r[im]);
+
+      return ret;
+    }
+
+    function zpk2sos(z,p,k) {
+
+      // Create unity SOS array.
+      let sos = [];
+      while ((sos.length * 2) < z.length) sos.push([1, 0, 0, 1, 0, 0]);
+      while ((sos.length * 2) < p.length) sos.push([1, 0, 0, 1, 0, 0]);
+
+      // Sort roots
+      z = sort(z);
+      p = sort(p);
+
+      // Modify sections for zeros
+      let N = z.length;
+      let odd = N % 2;
+      let Npairs = (N - odd) / 2;
+      for (let n = 0; n < Npairs; n++) {
+        sos[n][1] = -2 * z[n][0];
+        sos[n][2] = (z[n][0] ** 2) + (z[n][1] ** 2);
+      }
+      if(odd) sos[Npairs][1] = -z[Npairs*2][0];
+
+      // Modify sections for poles
+      N = p.length;
+      odd = N % 2;
+      Npairs = (N - odd) / 2;
+      for (let n = 0; n < Npairs; n++) {
+        sos[n][4] = -2 * p[n][0];
+        sos[n][5] = (p[n][0] ** 2) + (p[n][1] ** 2);
+      }
+      if(odd) sos[Npairs][4] = -p[Npairs*2][0];
+
+      let l = sos.length - 1;
+      sos[l][0] *= k;
+      sos[l][1] *= k;
+      sos[l][2] *= k;
+
+      return sos;
     }
 
     class FFT {
@@ -1180,7 +1255,7 @@ NTY3ODlBQkNERUYAQZAkCwEFAEGcJAsBBABBtCQLCgUAAAAGAAAAaBMAQcwkCwECAEHcJAsI////
       if (typeof w === 'number') {
         const N = w;
         w = [];
-        const step = Math.PI * 2 / N;
+        const step = Math.PI / N;
         for(let n=0; n < N; n++) w.push(n*step);
       }
       let h = [];
@@ -1212,7 +1287,6 @@ NTY3ODlBQkNERUYAQZAkCwEFAEGcJAsBBABBtCQLCgUAAAAGAAAAaBMAQcwkCwECAEHcJAsI////
     exports.b64 = b64;
     exports.buttap = buttap;
     exports.butter = butter;
-    exports.butter_zpk = butter_zpk;
     exports.ellip = ellip;
     exports.ellipap = ellipap;
     exports.onWasm = onWasm;
