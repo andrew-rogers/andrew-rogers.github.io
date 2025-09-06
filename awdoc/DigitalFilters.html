@@ -18,13 +18,13 @@ Design Notes for the WasmDSP Filter Functions
 Frequency Scaling
 -----------------
 
-The single pole analogue prototype filter has the transfer function
+The single pole analogue prototype Butterworth filter has the transfer function
 
-$$ H(s) = \frac{1}{s+1} $$
+$$ H_p(s) = \frac{1}{s+1} $$
 
-The DC gain is found by letting $s=0$
+Its single pole is located at -1. The DC gain is found by letting $s=0$
 
-$$ H(0) = \frac{1}{1} = 1 $$
+$$ H_p(0) = \frac{1}{1} = 1 $$
 
 Frequency scaling by $\omega_0$ gives the transfer function
 
@@ -34,9 +34,35 @@ and its DC gain is
 
 $$ H(0) = \frac{1}{\omega_c} $$
 
-The gain compensation factor for the scaled first order Butterworth filter is therefore $k = \omega_c $. For a second order filter the gain compesation factor would be $k = \omega_c^2$. Genrally speaking the scaled lowpass filter with $N$ fewer zeros than poles has a gain compensation factor of
+The gain compensation factor for the scaled first order Butterworth filter is therefore $k = \omega_c $. For a second order filter the gain compesation factor would be $k = \omega_c^2$. In general the scaled lowpass filter with $N$ fewer zeros than poles has a gain compensation factor of
 
 $$ k = \omega_c^N $$
+
+### Highpass Filter
+
+The lowpass prototype has the transfer function
+
+$$\begin{align}
+      H_p(s) &= \frac{(s-s_{z,1})(s-s_{z,2})\dots(s-s_{z,N})}{(s-s_{p,1})(s-s_{p,2})\dots(s-s_{p,N})} \\
+             &= \frac{\prod(s-s_{z,n})}{\prod(s-s_{p,n})}
+\end{align} $$
+
+and passband gain at $s=0$
+
+$$ H_p(0) = \frac{\prod(-s_{z,n})}{\prod(-s_{p,n})} $$
+
+For the highpass filter the roots are inverted and scaled by $\omega_0$ to give
+
+$$ H(s) = \frac{\prod\left(s-\frac{\omega_0}{s_{z,n}}\right)}{\prod\left(s-\frac{\omega_0}{s_{p,n}}\right)} $$
+
+The gain in the passband is consider at the limit $s \to \infty$
+
+$$ \lim_{s \to \infty} H(s) = 1 $$
+
+The gain compensation factor is
+
+$$ k = \frac{\prod(-s_{z,n})}{\prod(-s_{p,n})} $$
+
 
 Bilinear Z-transform
 --------------------
