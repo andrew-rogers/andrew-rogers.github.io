@@ -63,6 +63,27 @@ The gain compensation factor is
 
 $$ k = \frac{\prod(-s_{z,n})}{\prod(-s_{p,n})} $$
 
+### Bandpass Filter
+
+$$ s \longmapsto \frac{\omega_0}{b}\left(\frac{s}{\omega_0}+\frac{\omega_0}{s}\right) $$
+
+$$ s \longmapsto \frac{s^2 + \omega_0^2}{sb} $$
+
+$$ \frac{1}{s-s_p} \longmapsto \frac{1}{\frac{s^2 + \omega_0^2}{sb} - s_p} $$
+
+$$ \begin{align}
+      \frac{1}{\frac{s^2 + \omega_0^2}{sb} - s_p} &= \frac{s}{\frac{1}{b}s^2 - ss_p + \frac{\omega_0^2}{b}}
+\end{align} $$
+
+To find the two poles, find the roots of the denominator
+
+$$ \begin{align}
+      s_{p01} &= \frac{s_p\pm\sqrt{s_p^2-\frac{4}{b}\frac{\omega_0^2}{b}}}{\frac{2}{b}} \\
+              &= \frac{bs_p}{2} \pm \sqrt{\left(\frac{bs_p}{2}\right)^2 - \omega_0^2} \\
+              & = s_{pb} \pm \sqrt{s_{pb} - \omega_0^2} \quad s_{pb} = \frac{bs_p}{2}
+\end{align} $$
+
+
 
 Bilinear Z-transform
 --------------------
