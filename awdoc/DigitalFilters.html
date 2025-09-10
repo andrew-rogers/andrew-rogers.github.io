@@ -79,11 +79,12 @@ To find the two poles, find the roots of the denominator
 
 $$ \begin{align}
       s_{p01} &= \frac{s_p\pm\sqrt{s_p^2-\frac{4}{b}\frac{\omega_0^2}{b}}}{\frac{2}{b}} \\
-              &= \frac{bs_p}{2} \pm \sqrt{\left(\frac{bs_p}{2}\right)^2 - \omega_0^2} \\
-              & = s_{pb} \pm \sqrt{s_{pb} - \omega_0^2} \quad s_{pb} = \frac{bs_p}{2}
+              &= \frac{bs_p}{2} \pm \sqrt{\left(\frac{bs_p}{2}\right)^2 - \omega_0^2}
 \end{align} $$
 
+Applying the lowpas scaling factor $b/2$ to give $s_{pb} = bs_p/2$ simplifies the band transformation to
 
+$$ s_{p01} = s_{pb} \pm \sqrt{s_{pb}^2 - \omega_0^2}$$
 
 Bilinear Z-transform
 --------------------
@@ -144,6 +145,14 @@ sosfreqz(sos);
 
 AW{"type":"javascript"}
 let sos = signal.ellip(5,1,40,0.1,'hp');
+sosfreqz(sos);
+
+AW{"type":"javascript"}
+let sos = signal.ellip(4,1,40,[0.1, 0.15],'bp');
+sosfreqz(sos);
+
+AW{"type":"javascript"}
+let sos = signal.ellip(4,1,40,[0.1, 0.15],'bs');
 sosfreqz(sos);
 
 		</textarea>

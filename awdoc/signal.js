@@ -1,4 +1,8 @@
-define(['exports'], (function (exports) { 'use strict';
+(function (global, factory) {
+    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+    typeof define === 'function' && define.amd ? define(['exports'], factory) :
+    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory((global.WasmDSP = global.WasmDSP || {}, global.WasmDSP.modules = global.WasmDSP.modules || {}, global.WasmDSP.modules.signal = {})));
+})(this, (function (exports) { 'use strict';
 
     const b64 = `
 AGFzbQEAAAABpwEZYAF/AX9gA39/fwBgAX8AYAN/f38Bf2AAAGAFf39/f38Bf2ACf38Bf2ACf38A
@@ -997,6 +1001,15 @@ NTY3ODlBQkNERUYAQZAkCwEFAEGcJAsBBABBtCQLCgUAAAAGAAAAaBMAQcwkCwECAEHcJAsI////
       return [a[0]*b[0] - a[1]*b[1], a[0]*b[1] + a[1]*b[0]];
     }
 
+    function complexSqrt(a) {
+      // Conver to polar and divide angle by two
+      let r = Math.sqrt(a[0]**2 + a[1]**2);
+      let angle = Math.atan2(a[1], a[0]);
+      r = Math.sqrt(r);
+      angle = angle / 2;
+      return [r * Math.cos(angle), r * Math.sin(angle)];
+    }
+
     function findR(N, L) {
       let xi_min = 1 + Number.EPSILON;
       let xi = xi_min;
@@ -1031,18 +1044,68 @@ NTY3ODlBQkNERUYAQZAkCwEFAEGcJAsBBABBtCQLCgUAAAAGAAAAaBMAQcwkCwECAEHcJAsI////
       if (bt.length == 0) bt = 'L';
       else bt = bt[0];
 
-      if (opt.digital) fc = preWarp(fc); // TODO: handle two frequencies for bandpas / bandstop
+      if (opt.digital) {
+        if (fc.constructor === Array) fc = fc.map((v) => preWarp(v));
+        else fc = preWarp(fc);
+      }
+
+      function bandTransform(r, ww) {
+        let ret = [];
+        r.forEach((v) => {
+          let rr = complexMult$1(v,v);
+          let sq = complexSqrt([rr[0] - ww, rr[1]]);
+          ret.push([v[0]+sq[0], v[1]+sq[1]]);
+          ret.push([v[0]-sq[0], v[1]-sq[1]]);
+        });
+        return ret;
+      }
+
+      function hpscale(z, p, k, fc) {
+        // Gain compensation.
+        let kz = [1, 0];
+        z.forEach((v) => kz = complexMult$1(kz, [-v[0], -v[1]]));
+        let kp = [1, 0];
+        p.forEach((v) => kp = complexMult$1(kp, [-v[0], -v[1]]));
+        k = k * complexDiv$1(kz, kp)[0];
+
+        // Scale roots.
+        z = z.map((v) => complexDiv$1([fc, 0], v));
+        p = p.map((v) => complexDiv$1([fc, 0], v));
+        return [z, p, k];
+      }
+
+      function lpscale(z, p, k, fc) {
+        k = k * (fc ** (p.length - z.length));
+        z = z.map((v) => [fc * v[0], fc * v[1]]);
+        p = p.map((v) => [fc * v[0], fc * v[1]]);
+        return [z, p, k];
+      }
 
       // Scale zeros and poles
       if (bt == 'H') { // TODO: 'P' and 'S'
-        z = z.map((v) => complexDiv$1([fc, 0], v));
-        p = p.map((v) => complexDiv$1([fc, 0], v));
+        [z, p, k] = hpscale(z, p, k,fc);
         while (z.length < p.length) z.push([0,0]); // Move zeros from infinity to zero.
+      } else if (bt == 'P') {
+        let ww = fc[0] * fc[1];
+        let b = fc[1] - fc[0];
+        let num_inf = p.length - z.length;
+        [z, p, k] = lpscale(z, p, k, b/2);
+        z = bandTransform(z, ww);
+        p = bandTransform(p, ww);
+        for (let n = 0; n < num_inf; n++) z.push([0,0]); // Move zeros from infinity to zero.
+      } else if (bt == 'S') {
+        let ww = fc[0] * fc[1];
+        let b = fc[1] - fc[0];
+        let num_inf = p.length - z.length;
+        [z, p, k] = hpscale(z, p, k, b/2);
+        z = bandTransform(z, ww);
+        p = bandTransform(p, ww);
+        let wo = Math.sqrt(ww);
+        for (let n = 0; n < num_inf; n++) z.push([0, wo]); // Move zeros from infinity to jwo.
+        for (let n = 0; n < num_inf; n++) z.push([0,-wo]); // Move zeros from infinity to -jwo.
       } else {
         // Lowpass default.
-        z = z.map((v) => [fc * v[0], fc * v[1]]);
-        p = p.map((v) => [fc * v[0], fc * v[1]]);
-        k = k * (fc ** (p.length - z.length));
+        [z, p, k] = lpscale(z, p, k, fc);
       }
 
       if (opt.digital) [z, p, k] = bzt(z, p, k);
