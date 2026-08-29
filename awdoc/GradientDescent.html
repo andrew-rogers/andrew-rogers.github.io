@@ -27,6 +27,20 @@ gd.mse = function(a,b) {
   return sum / a.length;
 }
 
+gd.polyval = function(p, x) {
+  ret = [];
+  for (let n = 0; n < x.length; n++) {
+    let xx = 1;
+    let y = 0;
+    for (let i = p.length - 1; i >= 0; i--) {
+      y += p[i] * xx;
+      xx = xx * x[n];
+    }
+    ret.push(y);
+  }
+  return ret;
+}
+
 gd.update = function(L, x0, x1, func) {
   let y0 = func(x0);
   let y1 = func(x1);
@@ -52,7 +66,7 @@ vars.mse = gd.mse(y, yfit);
 vars.x = x;
 vars.y = y;
 vars.cf = function(w) {
-  return gd.mse(y, gd.linval(w[0], w[1], x));
+  return gd.mse(y, gd.polyval(w, x));
 }
 
 AW{"type":"javascript", "hidden":false}
@@ -274,11 +288,11 @@ gd.fit = function(M, cost_function) {
     });
   }
 
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 4000; i++) {
     for (let k = 0; k < M; k++) {
       let wval = w[k];
       let wpval = wp[k];
-      for (let n = 0; n < 5; n++) {
+      for (let n = 0; n < 1; n++) {
         let wnew = gd.TEA(wval, wpval, cf[k]);
         wpval = wval;
         wval = wnew;
@@ -291,10 +305,14 @@ gd.fit = function(M, cost_function) {
   return w;
 }
 
-let w = gd.fit(2, vars.cf);
+let w = gd.fit(4, vars.cf);
+vars.w = w;
 print("fit = " + JSON.stringify(w));
 print("\nMSE = " + JSON.stringify(vars.cf(w)));
 
+AW{"type":"javascript", "hidden":false}
+plot(vars.x, vars.y);
+plot(vars.x, gd.polyval(vars.w, vars.x));
 
 		</textarea>
 		<script>
