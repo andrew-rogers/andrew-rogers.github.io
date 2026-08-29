@@ -21,15 +21,13 @@ gd.linval = function(m, c, x) {
 }
 
 gd.mse = function(a,b) {
-  console.log({a,b});
   if (a.length != b.length) return 0;
   let sum = 0;
   for (let n = 0; n < a.length; n++) sum += (a[n] - b[n]) ** 2;
   return sum / a.length;
 }
 
-gd.update = function(x0, x1, func) {
-  const L = 0.005;
+gd.update = function(L, x0, x1, func) {
   let y0 = func(x0);
   let y1 = func(x1);
   let x = x0 - L * (y1 - y0) / (x1 - x0);
@@ -112,15 +110,48 @@ function f(m) {
 
 let m1 = 1;
 let m0 = 0;
-let m = 0;
-for (let n = 0; n < 10; n++) {
-  m = gd.update(m0, m1, f);
+let m = [];
+let L = 0.005; // Learning rate.
+for (let n = 0; n < 100; n++) {
+  let mval = gd.update(L, m0, m1, f);
   m1 = m0;
-  m0 = m;
-  console.log({n,m});
+  m0 = mval;
+  m.push(mval);
+  vars.fit_m = mval;
 }
 
-print("m = " + JSON.stringify(m));
+plot(m)
+
+AW{"type":"mjmd"}
+Find $c$ using update rule.
+
+AW{"type":"javascript", "hidden":false}
+let x = vars.x;
+let y = vars.y;
+const m = vars.fit_m;;
+
+function f(c) {
+  return gd.mse(y, gd.linval(m, c ,x));
+}
+
+let c1 = 1;
+let c0 = 0;
+let c = [];
+let L = 0.05; // Learning rate.
+for (let n = 0; n < 100; n++) {
+  let cval = gd.update(L, c0, c1, f);
+  c1 = c0;
+  c0 = cval;
+  c.push(cval);
+  vars.fit_c = cval;
+}
+
+plot(c)
+
+AW{"type":"javascript", "hidden":false}
+let str = "MSE = " + JSON.stringify(gd.mse(vars.y, gd.linval(vars.fit_m, vars.fit_c, vars.x)));
+print(str);
+
 
 		</textarea>
 		<script>
