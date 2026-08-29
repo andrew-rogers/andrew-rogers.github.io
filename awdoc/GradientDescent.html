@@ -51,6 +51,9 @@ plot(x, yfit);
 vars.mse = gd.mse(y, yfit);
 vars.x = x;
 vars.y = y;
+vars.cf = function(w) {
+  return gd.mse(y, gd.linval(w[0], w[1], x));
+}
 
 AW{"type":"javascript", "hidden":false}
 let str = "MSE = " + JSON.stringify(vars.mse);
@@ -207,7 +210,7 @@ let y = vars.y;
 const c = -0.9387;
 
 function f(m) {
-  return gd.mse(y, gd.linval(m, c ,x));
+  return vars.cf([m,c]);
 }
 
 let m1 = 1;
@@ -232,7 +235,7 @@ let y = vars.y;
 const m = vars.fit_m;;
 
 function f(c) {
-  return gd.mse(y, gd.linval(m, c ,x));
+  return vars.cf([m,c]);
 }
 
 let c1 = 1;
@@ -254,6 +257,43 @@ print(str);
 
 AW{"type":"mjmd"}
 The main advantage of TEA is that is does not require a learning rate, $L$, making it much easier to use. Convergence is also much faster.
+
+AW{"type":"javascript", "hidden":false}
+gd.fit = function(M, cost_function) {
+
+  // Initialise weights.
+  let wp = [];
+  let w = [];
+  let cf = [];
+  for (let k = 0; k < M; k++) {
+    wp.push(1);
+    w.push(0);
+    cf.push(function(x) {
+      w[k] = x;
+      return cost_function(w);
+    });
+  }
+
+  for (let i = 0; i < 20; i++) {
+    for (let k = 0; k < M; k++) {
+      let wval = w[k];
+      let wpval = wp[k];
+      for (let n = 0; n < 5; n++) {
+        let wnew = gd.TEA(wval, wpval, cf[k]);
+        wpval = wval;
+        wval = wnew;
+      }
+      w[k] = wval;
+      wp[k] = wpval;
+    }
+  }
+
+  return w;
+}
+
+let w = gd.fit(2, vars.cf);
+print("fit = " + JSON.stringify(w));
+print("\nMSE = " + JSON.stringify(vars.cf(w)));
 
 
 		</textarea>
