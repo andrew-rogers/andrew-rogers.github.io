@@ -152,6 +152,109 @@ AW{"type":"javascript", "hidden":false}
 let str = "MSE = " + JSON.stringify(gd.mse(vars.y, gd.linval(vars.fit_m, vars.fit_c, vars.x)));
 print(str);
 
+AW{"type":"mjmd"}
+Two Estimate Algorithm (TEA)
+----------------------------
+
+Produces two estimates based on previous change in weight and picks the best. If that fails to produces a better estimate then the average of the two weights is returned so that the step change is samller on the next iteration.
+
+AW{"type":"javascript", "hidden":false}
+gd.TEA = function(x0, x1, func) {
+
+  // Swap if necessary
+  if (x1 < x0) {
+    let t = x0;
+    x0 = x1;
+    x1 = t;
+  }
+
+  let y0 = func(x0);
+  let y1 = func(x1);
+  let dx = x1 - x0
+
+  // Try new estimate twice dx away.
+  let x = x0;
+  let ymin = y0;
+  if (y1 > y0) x = x0 - 2 *dx;
+  else {
+    x = x1 + 2 * dx;
+    ymin = y1;
+  }
+  let ye = func(x);
+  if (ye < ymin) return x;
+
+  // Try new estimate dx away.
+  x = x0;
+  ymin = y0;
+  if (y1 > y0) x = x0 - dx;
+  else {
+    x = x1 + dx;
+    ymin = y1;
+  }
+  ye = func(x);
+  if (ye < ymin) return x;
+
+  // Take average. This might take us further away on this iteration but the next iteration will take a smaller step as dx will become smaller.
+  return (x0 + x1) / 2;
+}
+
+AW{"type":"mjmd"}
+Find $m$ using TEA.
+
+AW{"type":"javascript", "hidden":false}
+let x = vars.x;
+let y = vars.y;
+const c = -0.9387;
+
+function f(m) {
+  return gd.mse(y, gd.linval(m, c ,x));
+}
+
+let m1 = 1;
+let m0 = 0;
+let m = [];
+for (let n = 0; n < 100; n++) {
+  let mval = gd.TEA(m0, m1, f);
+  m1 = m0;
+  m0 = mval;
+  m.push(mval);
+  vars.fit_m = mval;
+}
+
+plot(m)
+
+AW{"type":"mjmd"}
+Find $c$ using TEA.
+
+AW{"type":"javascript", "hidden":false}
+let x = vars.x;
+let y = vars.y;
+const m = vars.fit_m;;
+
+function f(c) {
+  return gd.mse(y, gd.linval(m, c ,x));
+}
+
+let c1 = 1;
+let c0 = 0;
+let c = [];
+for (let n = 0; n < 100; n++) {
+  let cval = gd.TEA(c0, c1, f);
+  c1 = c0;
+  c0 = cval;
+  c.push(cval);
+  vars.fit_c = cval;
+}
+
+plot(c)
+
+AW{"type":"javascript", "hidden":false}
+let str = "MSE = " + JSON.stringify(gd.mse(vars.y, gd.linval(vars.fit_m, vars.fit_c, vars.x)));
+print(str);
+
+AW{"type":"mjmd"}
+The main advantage of TEA is that is does not require a learning rate, $L$, making it much easier to use. Convergence is also much faster.
+
 
 		</textarea>
 		<script>
