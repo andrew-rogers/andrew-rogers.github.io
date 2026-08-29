@@ -7,10 +7,51 @@
 	<body>
 		<textarea id="aw_json" class="awjson" hidden>
 
-AW{"type":"javascript", "hidden":"true"}
+AW{"type":"javascript", "hidden":true}
 AndrewWIDE.loadWasmDSPModules(['signal']);
 
+AW{"type":"javascript", "hidden":true}
+window.gd = {}; // Create a namespace for our gradient descent functions.
+window.vars = {}; // Namespaces to store experiment variables.
+
+gd.linval = function(m, c, x) {
+  let y = [];
+  x.forEach(v => y.push(m * v + c));
+  return y;
+}
+
+gd.mse = function(a,b) {
+  console.log({a,b});
+  if (a.length != b.length) return 0;
+  let sum = 0;
+  for (let n = 0; n < a.length; n++) sum += (a[n] - b[n]) ** 2;
+  return sum / a.length;
+}
+
 AW{"type":"mjmd"}
+Gradient Descent
+================
+
+Plot some experimental data and attempt an intial linear fit.
+
+AW{"type":"javascript", "hidden":false}
+let x = [    0,  1.1,  1.9,  3.2, 4.4, 5.1,  6.1, 6.9, 7.7, 8.9,10.3];
+let y = [-0.95,-0.83, -0.6,-0.45,-0.2,   0, 0.23,0.42,0.58, 0.8,0.96];
+plot(x, y);
+let m = 0.185;
+let c = -0.95;
+yfit = gd.linval(m, c, x);
+plot(x, yfit);
+vars.mse = gd.mse(y, yfit);
+
+AW{"type":"javascript", "hidden":false}
+let str = "MSE = " + JSON.stringify(vars.mse);
+print(str);
+
+AW{"type":"mjmd"}
+Update rule
+-----------
+
 $$ w_{i,n} = w_{i,n-1} - L \frac{c_{n-2}-c_{n-1}}{w_{i,n-2}-w_{i,n-1}} $$
 
 		</textarea>
