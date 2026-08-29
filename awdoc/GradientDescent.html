@@ -43,10 +43,47 @@ let c = -0.95;
 yfit = gd.linval(m, c, x);
 plot(x, yfit);
 vars.mse = gd.mse(y, yfit);
+vars.x = x;
+vars.y = y;
 
 AW{"type":"javascript", "hidden":false}
 let str = "MSE = " + JSON.stringify(vars.mse);
 print(str);
+
+AW{"type":"mjmd"}
+Plot MSE for range of $c$.
+
+AW{"type":"javascript", "hidden":false}
+let x = vars.x;
+let y = vars.y;
+const m = 0.185;
+let mse = [];
+let c = [];
+for (let n = -1; n <= 1; n += 0.001) {
+  let cval = 0.1 * n - 0.9;
+  mse.push(gd.mse(y, gd.linval(m, cval, x)));
+  c.push(cval);
+}
+plot(c, mse);
+
+AW{"type":"mjmd"}
+From the plot it can be seen that the MSE is minimised when $c=-0.9387$. Plot MSE for range of $m$
+
+AW{"type":"javascript", "hidden":false}
+let x = vars.x;
+let y = vars.y;
+const c = -0.9387;
+let mse = [];
+let m = [];
+for (let n = -1; n <= 1; n += 0.001) {
+  let mval = 0.1 * n + 0.2;
+  mse.push(gd.mse(y, gd.linval(mval, c, x)));
+  m.push(mval);
+}
+plot(m, mse);
+
+AW{"type":"mjmd"}
+From the plot it can be seen that the MSE is minimised  to $0.00417$ when $m=0.1888$. Showing a slight improvement on the initial fit.
 
 AW{"type":"mjmd"}
 Update rule
