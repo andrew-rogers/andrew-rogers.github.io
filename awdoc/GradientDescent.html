@@ -28,6 +28,14 @@ gd.mse = function(a,b) {
   return sum / a.length;
 }
 
+gd.update = function(x0, x1, func) {
+  const L = 0.005;
+  let y0 = func(x0);
+  let y1 = func(x1);
+  let x = x0 - L * (y1 - y0) / (x1 - x0);
+  return x;
+}
+
 AW{"type":"mjmd"}
 Gradient Descent
 ================
@@ -90,6 +98,29 @@ Update rule
 -----------
 
 $$ w_{i,n} = w_{i,n-1} - L \frac{c_{n-2}-c_{n-1}}{w_{i,n-2}-w_{i,n-1}} $$
+
+Find $m$ using update rule.
+
+AW{"type":"javascript", "hidden":false}
+let x = vars.x;
+let y = vars.y;
+const c = -0.9387;
+      
+function f(m) {
+  return gd.mse(y, gd.linval(m, c ,x));
+}
+
+let m1 = 1;
+let m0 = 0;
+let m = 0;
+for (let n = 0; n < 10; n++) {
+  m = gd.update(m0, m1, f);
+  m1 = m0;
+  m0 = m;
+  console.log({n,m});
+}
+
+print("m = " + JSON.stringify(m));
 
 		</textarea>
 		<script>
