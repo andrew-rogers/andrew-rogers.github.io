@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" charset="UTF-8">
+	</head>
+	<body>
+
+<iframe id="worker_frame" hidden></iframe>
+
+  <script>
+var worker_frame = document.getElementById('worker_frame');
+var doc_frame = worker_frame.contentDocument;
+if (!doc_frame && worker_frame.contentWindow) {
+    doc_frame = worker_frame.contentWindow.document;
+}
+
+// Load the pyodide.js script into the worker frame.
+var script = doc_frame.createElement('script');
+script.type = "text/javascript";
+script.src = "https://cdn.jsdelivr.net/pyodide/v314.0.6/full/pyodide.js";
+script.onload = function(){console.log('loaded');parent.postMessage("Loaded!");};
+doc_frame.body.appendChild(script);
+
+// Worker code for message handling.
+let code =
+`async function main(){
+  let pyodide = await loadPyodide();
+  parent.postMessage("Loaded!");
+}
+addEventListener("message", (event) => {console.log(event);});   
+main();`;
+script = doc_frame.createElement('script');
+script.type = "text/javascript";
+script.textContent = code;
+doc_frame.body.appendChild(script);
+
+
+// Receive messages from worker.
+addEventListener("message", (event) => {console.log(event);});
+
+// Send a message to worker.
+worker_frame.contentWindow.postMessage("Thing.");
+    
+    </script>
+    
+	</body>
+</html>
